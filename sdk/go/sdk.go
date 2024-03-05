@@ -4,32 +4,17 @@ package sdk
 
 import (
 	"context"
-	"net/http"
+	"log/slog"
 )
 
-// Response of function call
-type Response struct {
-
-	// Body the body will be written back
-	Body []byte
-
-	// StatusCode needs to be populated with value such as http.StatusOK
-	StatusCode int
-
-	// Header is optional and contains any additional headers the function response should set
-	Header http.Header
+type Logger interface {
+	Log(ctx context.Context, level slog.Level, msg string, attrs ...slog.Attr)
 }
 
-// Request of function call
-type Request struct {
-	Body        []byte
-	Header      http.Header
-	QueryString string
-	Method      string
-	Host        string
-}
+type Request = map[string]any
+type Response = map[string]any
 
 // FunctionHandler used for a serverless Go method invocation
 type FunctionHandler interface {
-	Handle(ctx context.Context, req Request) (Response, error)
+	Handle(ctx context.Context, logger Logger, req Request) (Response, error)
 }

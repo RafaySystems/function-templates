@@ -3,19 +3,15 @@ package function
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 )
 
 // Handle a function invocation
-func Handle(ctx context.Context, req sdk.Request) (sdk.Response, error) {
-	var err error
+func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+	resp := sdk.Response{
+		"message": fmt.Sprintf("Hello, Go. You said: %s", req["name"]),
+	}
 
-	message := fmt.Sprintf("Body: %s", string(req.Body))
-
-	return sdk.Response{
-		Body:       []byte(message),
-		StatusCode: http.StatusOK,
-	}, err
+	return resp, nil
 }
