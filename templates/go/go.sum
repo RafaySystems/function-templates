@@ -1,2 +1,4 @@
+github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx65AqqDVpFEx+Rl6FJ1Oy/nX+BH/THvTLXn95CM=
+github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240229010109-f92a97d15c22 h1:lXOAfvi2DcaMn89HgwPEEn3ZDHvJVUEGuIkaqJAz0wc=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240229010109-f92a97d15c22/go.mod h1:Hjm3wW2hTtti0A2IfQnR6Xs4XzZAcOV429tHrlKMWys=
