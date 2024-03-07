@@ -269,6 +269,15 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			return
 		}
 
+		if req == nil {
+			req = make(Request)
+		}
+		req["metadata"] = map[string]string{
+			"activityID":      r.Header.Get(ActivityIDHeader),
+			"environmentID":   r.Header.Get(EnvironmentIDHeader),
+			"environmentName": r.Header.Get(EnvironmentNameHeader),
+		}
+
 		result, err := fsdk.handler(r.Context(), logger, req)
 
 		if err != nil {
