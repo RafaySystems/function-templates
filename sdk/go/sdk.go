@@ -279,7 +279,6 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 		}
 
 		result, err := fsdk.handler(r.Context(), logger, req)
-
 		if err != nil {
 			logger.Error("Error in function", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)

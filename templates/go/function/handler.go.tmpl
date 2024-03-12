@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
+	{{- range $value := .imports}}
+	"{{ $value }}"
+	{{- end}}
 )
 
-{{ .functionSignature}}
+{{ .source}}

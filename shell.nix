@@ -4,11 +4,11 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     # go
     go_1_22
+    go-bindata
     # buf
     # golangci-lint
     # go-migrate
-    # protobuf
-    
+    # protobuf    
 
     # test
     # moq

@@ -11,8 +11,15 @@ type Logger interface {
 	Log(ctx context.Context, level slog.Level, msg string, args ...any)
 }
 
-type Request = map[string]any
-type Response = map[string]any
+type Object map[string]any
+
+type Request = Object
+type Response = Object
+
+func (r Object) GetAsString(key string) (string, bool) {
+	val, ok := r[key].(string)
+	return val, ok
+}
 
 // FunctionHandler used for a serverless Go method invocation
 type FunctionHandler interface {
