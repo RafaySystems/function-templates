@@ -5,6 +5,7 @@ pkgs.mkShell {
     # go
     go_1_22
     go-bindata
+
     # buf
     # golangci-lint
     # go-migrate
