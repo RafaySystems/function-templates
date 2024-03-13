@@ -1,7 +1,7 @@
 
 generate-fixtures:
 	@echo "Generating fixtures..."
-	@go-bindata -o builder/fixturesfs/fixtures.go -ignore *__pycache__* -pkg fixturesfs templates/...
+	@go-bindata -o builder/fixturesfs/fixtures.go -ignore __pycache__ -pkg fixturesfs templates/...
 
 build-upload-python-sdk:
 	@echo "Building and uploading Python SDK..."

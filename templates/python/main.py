@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from function import handler
 import python_sdk_rafay_workflow as sdk
 

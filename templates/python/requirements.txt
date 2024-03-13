@@ -1,3 +1,4 @@
 flask
 waitress
 tox==3.*
+python_sdk_rafay_workflow>=0.0.12

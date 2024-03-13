@@ -28,7 +28,7 @@ WORKDIR /home/app/
 
 ARG PROXY=""
 
-COPY --chown=app:app index.py           .
+COPY --chown=app:app main.py           .
 COPY --chown=app:app requirements.txt   .
 USER root
 RUN pip install --no-cache-dir --proxy=${PROXY} -r requirements.txt
