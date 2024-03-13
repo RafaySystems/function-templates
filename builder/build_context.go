@@ -94,5 +94,12 @@ func (b *buildContextGetter) GetBuildContext(options BuildContextGetterOptions, 
 		return err
 	}
 
+	if err = os.RemoveAll(filepath.Join(buildPath, "function/handler."+options.Language+".tmpl")); err != nil {
+		return err
+	}
+	if err = os.RemoveAll(filepath.Join(buildPath, "function/dummy."+options.Language)); err != nil {
+		return err
+	}
+
 	return nil
 }

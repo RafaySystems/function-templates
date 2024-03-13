@@ -1,6 +1,8 @@
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ghcr.io/openfaas/of-watchdog:0.9.15 as watchdog
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-alpine as build
 
+RUN go install -v github.com/incu6us/goimports-reviser/v3@latest
+
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 ARG TARGETOS
@@ -17,9 +19,6 @@ WORKDIR /go/src/handler
 
 COPY . .
 
-RUN mv go.mod.tmpl go.mod
-RUN mv go.work.tmpl go.work
-RUN mv main.go.tmpl main.go
 
 ARG GO111MODULE="on"
 ARG GOPROXY=""
@@ -27,26 +26,15 @@ ARG GOFLAGS=""
 ARG CGO_ENABLED=0
 ENV CGO_ENABLED=${CGO_ENABLED}
 
-# Run a gofmt and exclude all vendored code.
-# RUN test -z "$(gofmt -l $(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./function/vendor/*"))" || { echo "Run \"gofmt -s -w\" on your Golang code"; exit 1; }
+RUN goimports-reviser -format -recursive -rm-unused ./...
 
-WORKDIR /go/src/handler/function
-RUN mkdir -p /go/src/handler/function/static
-
-RUN mv handler.go.func handler.go
-
-# RUN go install golang.org/x/tools/cmd/goimports@latest
-
-# RUN goimports -w handler.go
-
-# RUN cat handler.go 
-
-# RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} go test ./... -cover
 
 WORKDIR /go/src/handler
 RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
-    go build --ldflags "-s -w" -o handler .
+    go build --ldflags "-s -w" -o handler.bin .
 
+
+## Final image
 FROM --platform=${TARGETPLATFORM:-linux/amd64} alpine:3.18.4 as ship
 
 # Add non root user and certs
@@ -60,9 +48,8 @@ RUN mkdir -p /home/app \
 
 WORKDIR /home/app
 
-COPY --from=build --chown=app /go/src/handler/handler           .
-COPY --from=build --chown=app /usr/bin/fwatchdog                .
-COPY --from=build --chown=app /go/src/handler/function/static   static
+COPY --from=build --chown=app /go/src/handler/handler.bin  handler
+COPY --from=build --chown=app /usr/bin/fwatchdog  .
 
 USER app
 
