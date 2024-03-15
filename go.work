@@ -1,6 +1,7 @@
 go 1.22.0
 
 use (
+	./templates/go/function
 	./builder
 	./sdk/go
 	./templates/go

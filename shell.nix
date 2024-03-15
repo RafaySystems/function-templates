@@ -5,6 +5,8 @@ pkgs.mkShell {
     # go
     go_1_22
     go-bindata
+    gotools
+    goimports-reviser
 
     # buf
     # golangci-lint

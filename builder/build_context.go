@@ -2,12 +2,16 @@ package builder
 
 import (
 	"bytes"
+	"context"
+	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"text/template"
+	"strings"
 
+	"github.com/mholt/archiver/v4"
 	"github.com/otiai10/copy"
 )
 
@@ -21,18 +25,31 @@ const (
 
 	// TemplatesFolder is the folder for the templates in the fixtures
 	TemplatesFolder = "templates"
-
-	functionHandlerTemplateStr = "handler.{{.language}}.tmpl"
 )
 
 var (
-	functionHandlerTemplate = template.Must(template.New("").Parse(functionHandlerTemplateStr))
+	sourceInfo = map[string]struct {
+		HandlerExtension string
+		TemplatePath     string
+		DestPath         string
+	}{
+		GoLanguage:     {"go", "function/go.mod.tmpl", "function/go.mod"},
+		PythonLanguage: {"py", "function/requirements.txt.tmpl", "function/requirements.txt"},
+	}
 )
 
 type buildContextGetter struct {
 	tmpdir          string
 	fixtures        fs.FS
 	templatesFolder string
+}
+
+func NewBuildContextGetter(tmpdir string, fixtures fs.FS) *buildContextGetter {
+	return &buildContextGetter{
+		tmpdir:          tmpdir,
+		fixtures:        fixtures,
+		templatesFolder: TemplatesFolder,
+	}
 }
 
 /*
@@ -44,14 +61,14 @@ How to prepare the build context for a $language function
 6. write the tar to the writer
 */
 
-func (b *buildContextGetter) GetBuildContext(options BuildContextGetterOptions, writer io.Writer) error {
+func (b *buildContextGetter) GetBuildContext(ctx context.Context, options BuildContextGetterOptions, writer io.Writer) error {
 
 	buildPath, err := os.MkdirTemp(b.tmpdir, "build-context-*")
 	if err != nil {
 		return err
 	}
 
-	//defer os.RemoveAll(buildPath)
+	defer os.RemoveAll(buildPath)
 
 	srcPath := filepath.Join(b.templatesFolder, options.Language)
 
@@ -64,8 +81,7 @@ func (b *buildContextGetter) GetBuildContext(options BuildContextGetterOptions, 
 		return err
 	}
 
-	// render the templates using the function data
-	parsed, err := template.ParseFS(b.fixtures, "templates/**/function/*.tmpl")
+	sourceDependenciesTemplate, err := template.ParseFS(b.fixtures, fmt.Sprintf("templates/%s/%s", options.Language, sourceInfo[options.Language].TemplatePath))
 	if err != nil {
 		return err
 	}
@@ -73,31 +89,59 @@ func (b *buildContextGetter) GetBuildContext(options BuildContextGetterOptions, 
 	buf := new(bytes.Buffer)
 
 	data := map[string]interface{}{
-		"language": options.Language,
-		"source":   options.Source,
-		"imports":  options.Imports,
+		"source_dependencies": options.SourceDependencies,
 	}
 
-	if err = functionHandlerTemplate.Execute(buf, data); err != nil {
+	// render the templates using the function data
+	err = sourceDependenciesTemplate.Execute(buf, data)
+	if err != nil {
 		return err
 	}
 
-	functionTemplatePath := buf.String()
-
-	buf.Reset()
-
-	if err := parsed.ExecuteTemplate(buf, functionTemplatePath, data); err != nil {
+	f, err := os.OpenFile(filepath.Join(buildPath, sourceInfo[options.Language].DestPath), os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
 		return err
 	}
 
-	if err = os.WriteFile(filepath.Join(buildPath, "function/handler."+options.Language), buf.Bytes(), 0644); err != nil {
+	_, err = io.Copy(f, buf)
+	if err != nil {
 		return err
 	}
 
-	if err = os.RemoveAll(filepath.Join(buildPath, "function/handler."+options.Language+".tmpl")); err != nil {
+	if err = os.WriteFile(filepath.Join(buildPath, "function/handler."+sourceInfo[options.Language].HandlerExtension), []byte(options.Source), 0644); err != nil {
 		return err
 	}
-	if err = os.RemoveAll(filepath.Join(buildPath, "function/dummy."+options.Language)); err != nil {
+
+	tarFiles := map[string]string{}
+
+	err = filepath.WalkDir(buildPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		tarFiles[path] = strings.TrimPrefix(path, buildPath)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	files, err := archiver.FilesFromDisk(&archiver.FromDiskOptions{}, tarFiles)
+	if err != nil {
+		return err
+	}
+
+	format := archiver.CompressedArchive{
+		Compression: archiver.Gz{},
+		Archival:    archiver.Tar{},
+	}
+
+	err = format.Archive(ctx, writer, files)
+	if err != nil {
 		return err
 	}
 
