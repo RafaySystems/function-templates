@@ -4,13 +4,10 @@ package sdk
 // Original license: MIT
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -220,12 +217,9 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		_, pipew := io.Pipe()
-		defer pipew.Close()
+		piper, pipew := io.Pipe()
 
-		bufw := bufio.NewWriter(pipew)
-
-		logger := slog.New(slog.NewTextHandler(bufw, &slog.HandlerOptions{
+		logger := slog.New(slog.NewTextHandler(pipew, &slog.HandlerOptions{
 			AddSource: true,
 			Level:     fsdk.logLevel,
 		}))
@@ -242,31 +236,35 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 
 		path := engineEndpoint + fileUploadPath
 
-		req, err := http.NewRequestWithContext(r.Context(), "POST", path, bytes.NewBufferString("test"))
+		req, err := http.NewRequestWithContext(r.Context(), "POST", path, piper)
 		if err != nil {
-			logger.Info("Error creating request", "error", err, "path", path)
+			fsdk.logger.Info("Error creating request", "error", err, "path", path)
+			pipew.Close()
+			piper.Close()
 			return
 		}
+
+		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resp, err := fsdk.client.Do(req)
+			if err != nil {
+				fsdk.logger.Info("Error in file upload", "error", err)
+				return
+			}
+			if resp.Body != nil {
+				defer resp.Body.Close()
+			}
+		}()
 
 		handler := fsdk.makeRequestHandler(logger)
 		handler(w, r)
 
-		go func() {
-			err := bufw.Flush()
-			if err != nil {
-				fsdk.logger.Info("Error flushing log buffer", "error", err)
-				return
-			}
-		}()
-		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
-
-		resp, err := fsdk.client.Do(req)
-		if err != nil {
-			fsdk.logger.Info("Error in file upload", "error", err)
-			return
-		}
-
-		defer resp.Body.Close()
+		pipew.Close()
+		wg.Wait()
 	}
 
 }
@@ -282,7 +280,7 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			bodyBytes, bodyErr := io.ReadAll(r.Body)
 
 			if bodyErr != nil {
-				log.Printf("Error reading body from request.")
+				logger.Error("Error reading body from request.")
 			}
 
 			input = bodyBytes

@@ -36,6 +36,7 @@ func TestFunctionSDK(t *testing.T) {
 		sdk.WithListener(listener),
 		sdk.WithHandler(
 			func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
 				panic(req)
 			},
 		),
