@@ -2,6 +2,7 @@ FROM --platform=${TARGETPLATFORM:-linux/amd64} ghcr.io/openfaas/of-watchdog:0.9.
 FROM --platform=${BUILDPLATFORM:-linux/amd64} golang:1.22-alpine as build
 
 RUN go install -v github.com/incu6us/goimports-reviser/v3@latest
+RUN go install golang.org/x/tools/cmd/goimports@latest
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
@@ -26,7 +27,9 @@ ARG GOFLAGS=""
 ARG CGO_ENABLED=0
 ENV CGO_ENABLED=${CGO_ENABLED}
 
+RUN goimports -w .
 RUN goimports-reviser -format -recursive -rm-unused ./...
+RUN go mod download
 
 
 WORKDIR /go/src/handler

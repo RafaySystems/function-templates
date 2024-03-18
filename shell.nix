@@ -11,6 +11,8 @@ pkgs.mkShell {
     # go
     go_1_22
     go-bindata
+    gotools
+    goimports-reviser
 
     #python
     python311

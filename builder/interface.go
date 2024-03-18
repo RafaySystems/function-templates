@@ -7,9 +7,10 @@ import (
 
 // BuildContextGetterOptions is the options for getting build context for a function
 type BuildContextGetterOptions struct {
-	Language string
-	Source   string
-	Imports  []string
+	Language           string
+	Source             string
+	SourceDependencies []string
+	SystemDependencies []string
 }
 
 // BuildContextGetter is an interface for getting build context for a function

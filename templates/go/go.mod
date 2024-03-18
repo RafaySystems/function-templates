@@ -1,4 +1,4 @@
-module handler
+module go-function-handler
 
 go 1.22
 
