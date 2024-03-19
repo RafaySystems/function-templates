@@ -59,9 +59,15 @@ def handle(handler, logger=None) -> Tuple[Dict[str, Any], int]:
             "environmentName": request.headers.get(EnvironmentNameHeader),
         }  
         resp = handler(logger, req)
-        resp, status_code = jsonify(resp), 200        
+        resp, status_code = jsonify(resp), 200
+    except ExecuteAgainException as e:
+        resp, status_code = jsonify(errorCode=e.code,message=e.message), 500
+    except FailedException as e:
+        resp, status_code = jsonify(errorCode=e.code,message=e.message), 500
+    except TransientException as e:
+        resp, status_code = jsonify(errorCode=e.code,message=e.message), 500
     except Exception as e:
-        resp, status_code = jsonify({ "error": str(e) }), 500
+        resp, status_code = jsonify(errorCode=ERROR_CODE_FAILED,message=str(e)), 500
     return resp, status_code
 
 

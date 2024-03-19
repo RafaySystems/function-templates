@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -26,6 +25,7 @@ var (
 
 type SDKOptions struct {
 	Port                int
+	Listener            net.Listener
 	Handler             Handler
 	ReadTimeout         time.Duration
 	WriteTimeout        time.Duration
@@ -40,6 +40,12 @@ type SDKOption func(*SDKOptions)
 func WithPort(port int) SDKOption {
 	return func(o *SDKOptions) {
 		o.Port = port
+	}
+}
+
+func WithListener(listener net.Listener) SDKOption {
+	return func(o *SDKOptions) {
+		o.Listener = listener
 	}
 }
 
@@ -89,6 +95,7 @@ func WithShutdownTimeout(shutdownTimeout time.Duration) SDKOption {
 func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 	options := &SDKOptions{
 		Port:                5000,
+		Listener:            nil,
 		Handler:             nil,
 		ReadTimeout:         10 * time.Second,
 		WriteTimeout:        10 * time.Second,
@@ -116,6 +123,7 @@ func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 	return &FunctionSDK{
 		logger:          logger,
 		port:            options.Port,
+		listener:        options.Listener,
 		handler:         options.Handler,
 		readTimeout:     options.ReadTimeout,
 		writeTimeout:    options.WriteTimeout,
@@ -130,6 +138,7 @@ func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 type FunctionSDK struct {
 	logger          *slog.Logger
 	port            int
+	listener        net.Listener
 	handler         Handler
 	readTimeout     time.Duration
 	writeTimeout    time.Duration
@@ -141,9 +150,15 @@ type FunctionSDK struct {
 
 func (fsdk *FunctionSDK) Run(ctx context.Context) error {
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", fsdk.port))
-	if err != nil {
-		return err
+	var listener net.Listener
+	var err error
+	if fsdk.listener != nil {
+		listener = fsdk.listener
+	} else {
+		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", fsdk.port))
+		if err != nil {
+			return err
+		}
 	}
 
 	errChan := make(chan error, 1)
@@ -203,7 +218,6 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		piper, pipew := io.Pipe()
-		defer pipew.Close()
 
 		logger := slog.New(slog.NewTextHandler(pipew, &slog.HandlerOptions{
 			AddSource: true,
@@ -224,22 +238,33 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 
 		req, err := http.NewRequestWithContext(r.Context(), "POST", path, piper)
 		if err != nil {
-			logger.Info("Error creating request", "error", err, "path", path)
+			fsdk.logger.Info("Error creating request", "error", err, "path", path)
+			pipew.Close()
+			piper.Close()
 			return
 		}
+
+		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			resp, err := fsdk.client.Do(req)
+			if err != nil {
+				fsdk.logger.Info("Error in file upload", "error", err)
+				return
+			}
+			if resp.Body != nil {
+				defer resp.Body.Close()
+			}
+		}()
 
 		handler := fsdk.makeRequestHandler(logger)
 		handler(w, r)
 
-		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
-
-		resp, err := fsdk.client.Do(req)
-		if err != nil {
-			logger.Info("Error in file upload", "error", err)
-			return
-		}
-
-		defer resp.Body.Close()
+		pipew.Close()
+		wg.Wait()
 	}
 
 }
@@ -255,7 +280,7 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			bodyBytes, bodyErr := io.ReadAll(r.Body)
 
 			if bodyErr != nil {
-				log.Printf("Error reading body from request.")
+				logger.Error("Error reading body from request.")
 			}
 
 			input = bodyBytes
@@ -278,10 +303,16 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			"environmentName": r.Header.Get(EnvironmentNameHeader),
 		}
 
-		result, err := fsdk.handler(r.Context(), logger, req)
+		result, err := fsdk.invokeHandler(r.Context(), logger, req)
 		if err != nil {
-			logger.Error("Error in function", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
+			if err, ok := err.(*ErrFunction); ok {
+				err := json.NewEncoder(w).Encode(err)
+				if err != nil {
+					logger.Error("Error in encoding error response", "error", err)
+				}
+			}
+			return
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
@@ -291,4 +322,26 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			logger.Error("Error in encoding response", "error", err)
 		}
 	}
+}
+
+func (fsdk *FunctionSDK) invokeHandler(ctx context.Context, logger *slog.Logger, req Request) (r Response, err error) {
+	defer func() {
+		if panic := recover(); panic != nil {
+			logger.Error("Panic in function", "panic", panic)
+			err = newErrFunctionWithStackTrace(errCodeFailed, fmt.Sprintf("Panic in function: %v", panic))
+		}
+	}()
+	r, err = fsdk.handler(ctx, logger, req)
+	if err != nil {
+		switch {
+		case IsErrExecuteAgain(err):
+			return nil, newErrFunction(errCodeExecuteAgain, err.Error())
+		case IsErrTransient(err):
+			return nil, newErrFunction(errCodeTransient, err.Error())
+		default:
+			return nil, newErrFunction(errCodeFailed, err.Error())
+		}
+	}
+
+	return r, nil
 }
