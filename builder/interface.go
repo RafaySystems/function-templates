@@ -17,3 +17,7 @@ type BuildContextGetterOptions struct {
 type BuildContextGetter interface {
 	GetBuildContext(context.Context, BuildContextGetterOptions, io.Writer) error
 }
+
+type Builder interface {
+	Build() error
+}
