@@ -7,9 +7,8 @@ packages = ["src/python_sdk_rafay_workflow"]
 
 [project]
 name = "python_sdk_rafay_workflow"
-version = "0.0.12"
+version = "0.0.13"
 authors = [{ name = "Bheema Sarat Chandra Kaki", email = "sarat@rafay.co" }]
-
 description = "Rafay workflow handler Python function SDK"
 readme = "README.md"
 requires-python = ">=3.11"
