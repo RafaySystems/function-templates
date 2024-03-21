@@ -17,7 +17,6 @@ ENVIRONMENT_NAME=os.environ.get('ENVIRONMENT_NAME')
 ENVIRONMENT_TEMPLATE_NAME=os.environ.get('ENVIRONMENT_TEMPLATE_NAME')
 JIRA_PROJECT=os.environ.get('JIRA_PROJECT')
 
-
 def create_issue(accountId,projectId,approverId):
     url = "https://"+JIRA_HOST_NAME+"/rest/api/3/issue"
 
@@ -128,9 +127,9 @@ def get_project_id(project):
     #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
     return(json.loads(response.text)['id'])
 
-def check_if_ticket_exists():
+def check_if_ticket_exists(ticket_id=""):
     query=ENVIRONMENT_NAME+" for "+JIRA_USER_EMAIL
-    url = "https://" + JIRA_HOST_NAME + "/rest/api/3/issue/picker?query="+query
+    url = "https://" + JIRA_HOST_NAME + "/rest/api/3/issue/" + ticket_id
     auth = HTTPBasicAuth(JIRA_ADMIN_USERNAME, JIRA_API_TOKEN)
     headers = {
         "Accept": "application/json"
@@ -142,18 +141,42 @@ def check_if_ticket_exists():
         auth=auth
     )
     #print(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-    if len(json.loads(response.text)['sections'][0]['issues']) > 0:
-        print("Ticket already exists")
-        return(True,str(json.loads(response.text)['sections'][0]['issues'][0]['id']))
+    if response.status_code >=200 and response.status_code < 300:
+        return True
     else:
-        return(False,"null")
+        return False
+
+def approve_issue(jira_id):
+    url = "https://"+JIRA_HOST_NAME+"/rest/api/3/issue/"+jira_id+"/transitions"
+    auth = HTTPBasicAuth(JIRA_ADMIN_USERNAME, JIRA_API_TOKEN)
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+    }
+
+    payload = json.dumps( {
+        "transition": {
+            "id": 971
+        }
+    } )
+
+    response = requests.request(
+        "POST",
+        url,
+        data=payload,
+        headers=headers,
+        auth=auth
+    )
+
+    response.raise_for_status()
 
 def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
     try:
+        counter = request['previous'].get('counter', 0) if 'previous' in request else 0
         logger.info("Checking if ticket exists")
-        exists,id=check_if_ticket_exists()
-        if exists == True:
-            logger.info(f"Ticket already exists {id}")
+        id = request['previous'].get('ticket_id', '') if 'previous' in request else ''
+        if id:
+            # exists=check_if_ticket_exists(ticket_id=request["previous"]["ticket_id"])
             status=get_status(id)
         else:
             logger.info("Creating ticket")
@@ -181,4 +204,5 @@ def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
         return {"status": "Declined"}
     else:
         logger.info("Waiting for ticket to be approved or declined")
-        raise sdk.ExecuteAgainException("Please wait for the ticket to be approved or declined")
+        raise sdk.ExecuteAgainException("Please wait for the ticket to be approved or declined", ticket_id=id, counter=counter+1)
+

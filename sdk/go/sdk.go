@@ -306,8 +306,15 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 		result, err := fsdk.invokeHandler(r.Context(), logger, req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			if err, ok := err.(*ErrFunction); ok {
-				err := json.NewEncoder(w).Encode(err)
+			if errFunc, ok := AsErrFunction(err); ok {
+				err := json.NewEncoder(w).Encode(errFunc)
+				if err != nil {
+					logger.Error("Error in encoding error response", "error", err)
+				}
+			} else {
+				err := json.NewEncoder(w).Encode(
+					&ErrFunction{Message: err.Error(), ErrCode: ErrCodeFailed},
+				)
 				if err != nil {
 					logger.Error("Error in encoding error response", "error", err)
 				}
@@ -328,19 +335,12 @@ func (fsdk *FunctionSDK) invokeHandler(ctx context.Context, logger *slog.Logger,
 	defer func() {
 		if panic := recover(); panic != nil {
 			logger.Error("Panic in function", "panic", panic)
-			err = newErrFunctionWithStackTrace(errCodeFailed, fmt.Sprintf("Panic in function: %v", panic))
+			err = newErrFailedWithStackTrace(fmt.Sprintf("Panic in function: %v", panic))
 		}
 	}()
 	r, err = fsdk.handler(ctx, logger, req)
 	if err != nil {
-		switch {
-		case IsErrExecuteAgain(err):
-			return nil, newErrFunction(errCodeExecuteAgain, err.Error())
-		case IsErrTransient(err):
-			return nil, newErrFunction(errCodeTransient, err.Error())
-		default:
-			return nil, newErrFunction(errCodeFailed, err.Error())
-		}
+		return nil, err
 	}
 
 	return r, nil

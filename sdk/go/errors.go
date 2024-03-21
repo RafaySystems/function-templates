@@ -7,46 +7,130 @@ import (
 )
 
 const (
-	errCodeUnspecified errorCode = iota
-	errCodeExecuteAgain
-	errCodeFailed
-	errCodeTransient
+	ErrCodeUnspecified errorCode = iota
+	ErrCodeExecuteAgain
+	ErrCodeFailed
+	ErrCodeTransient
 )
 
 type errorCode int
 
 type ErrFunction struct {
-	ErrCode    errorCode    `json:"errorCode"`
-	Message    string       `json:"message"`
-	StackTrace []StackFrame `json:"stackTrace"`
+	ErrCode    errorCode      `json:"error_code"`
+	Message    string         `json:"message"`
+	StackTrace []stackFrame   `json:"stack_trace"`
+	Data       map[string]any `json:"data"`
 }
 
-type StackFrame struct {
+type stackFrame struct {
 	File     string `json:"file"`
 	Line     int    `json:"line"`
 	Function string `json:"function"`
 }
 
 func (e *ErrFunction) Error() string {
+	return fmt.Sprintf("error_code: %d, message: %s", e.ErrCode, e.Message)
+}
+
+type errExecuteAgain struct {
+	Message string
+	Data    map[string]any
+}
+
+func (e *errExecuteAgain) Error() string {
 	return e.Message
 }
 
-func newErrFunction(code errorCode, msg string) error {
-	return &ErrFunction{Message: msg, ErrCode: code}
+func (e *errExecuteAgain) Is(err error) bool {
+	_, ok := err.(*errExecuteAgain)
+	return ok
 }
 
-func newErrFunctionWithStackTrace(code errorCode, msg string) error {
+func (e *errExecuteAgain) Unwrap() error {
+	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeExecuteAgain, Data: e.Data}
+}
+
+type errFailed struct {
+	Message    string
+	StackTrace []stackFrame
+}
+
+func (e *errFailed) Error() string {
+	return e.Message
+}
+
+func (e *errFailed) Is(err error) bool {
+	_, ok := err.(*errFailed)
+	return ok
+}
+
+func (e *errFailed) Unwrap() error {
+	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeFailed, StackTrace: e.StackTrace}
+}
+
+type errTransient struct {
+	Message string
+}
+
+func (e *errTransient) Error() string {
+	return e.Message
+}
+
+func (e *errTransient) Is(err error) bool {
+	_, ok := err.(*errTransient)
+	return ok
+}
+
+func (e *errTransient) Unwrap() error {
+	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeTransient}
+}
+
+func IsErrExecuteAgain(err error) bool {
+	return errors.Is(err, &errExecuteAgain{})
+}
+
+func IsErrFailed(err error) bool {
+	return errors.Is(err, &errFailed{})
+}
+
+func IsErrTransient(err error) bool {
+	return errors.Is(err, &errTransient{})
+}
+
+func IsErrFunction(err error) bool {
+	return errors.Is(err, &ErrFunction{})
+}
+
+func AsErrFunction(err error) (*ErrFunction, bool) {
+	var ef *ErrFunction
+	ok := errors.As(err, &ef)
+	if ok {
+		// preserve last error message
+		ef.Message = err.Error()
+	}
+	return ef, ok
+}
+
+func NewErrExecuteAgain(msg string, data map[string]any) error {
+	return &errExecuteAgain{Message: msg, Data: data}
+}
+
+func NewErrFailed(msg string) error {
+	return &errFailed{Message: msg}
+}
+
+func newErrFailedWithStackTrace(msg string) error {
 	pc := make([]uintptr, 32)
 	n := runtime.Callers(3, pc)
 	if n == 0 {
-		return &ErrFunction{Message: msg, ErrCode: code}
+		return &errFailed{Message: msg}
 	}
 	pc = pc[:n]
 	frames := runtime.CallersFrames(pc)
-	stack := make([]StackFrame, 0, n)
+	stack := make([]stackFrame, 0, n)
 	for {
 		frame, more := frames.Next()
-		stack = append(stack, StackFrame{
+		stack = append(stack, stackFrame{
 			File:     frame.File,
 			Line:     frame.Line,
 			Function: frame.Function,
@@ -56,33 +140,9 @@ func newErrFunctionWithStackTrace(code errorCode, msg string) error {
 		}
 	}
 
-	return &ErrFunction{Message: msg, ErrCode: code, StackTrace: stack}
-}
-
-var ErrExecuteAgain = errors.New("function: execute again")
-var ErrFailed = errors.New("function: failed")
-var ErrTransient = errors.New("function: transient error")
-
-func IsErrExecuteAgain(err error) bool {
-	return errors.Is(err, ErrExecuteAgain)
-}
-
-func IsErrFailed(err error) bool {
-	return errors.Is(err, ErrFailed)
-}
-
-func IsErrTransient(err error) bool {
-	return errors.Is(err, ErrTransient)
-}
-
-func NewErrExecuteAgain(msg string) error {
-	return fmt.Errorf("%w: %s", ErrExecuteAgain, msg)
-}
-
-func NewErrFailed(msg string) error {
-	return fmt.Errorf("%w: %s", ErrFailed, msg)
+	return &errFailed{Message: msg, StackTrace: stack}
 }
 
 func NewErrTransient(msg string) error {
-	return fmt.Errorf("%w: %s", ErrTransient, msg)
+	return &errTransient{Message: msg}
 }

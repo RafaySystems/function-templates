@@ -9,12 +9,87 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestFunctionSDK(t *testing.T) {
+
+	testcases := map[string]struct {
+		handler    func(context.Context, sdk.Logger, sdk.Request) (sdk.Response, error)
+		statusCode int
+		response   sdk.Response
+		err        sdk.ErrFunction
+	}{
+		"success": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				return sdk.Response{"output1": "value1"}, nil
+			},
+			response:   sdk.Response{"output1": "value1"},
+			statusCode: http.StatusOK,
+		},
+		"panic": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				panic("panic")
+			},
+			err: sdk.ErrFunction{
+				Message: "Panic in function: panic",
+				ErrCode: sdk.ErrCodeFailed,
+			},
+			statusCode: http.StatusInternalServerError,
+		},
+		"general-error": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				return nil, fmt.Errorf("general error")
+			},
+			err: sdk.ErrFunction{
+				Message: "general error",
+				ErrCode: sdk.ErrCodeFailed,
+			},
+			statusCode: http.StatusInternalServerError,
+		},
+		"failed-error": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				return nil, fmt.Errorf("%w: %s", sdk.NewErrFailed("failed"), "wrapping error")
+			},
+			err: sdk.ErrFunction{
+				Message: "failed: wrapping error",
+				ErrCode: sdk.ErrCodeFailed,
+			},
+			statusCode: http.StatusInternalServerError,
+		},
+		"transient-error": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				return nil, sdk.NewErrTransient("transient")
+			},
+			err: sdk.ErrFunction{
+				Message: "transient",
+				ErrCode: sdk.ErrCodeTransient,
+			},
+			statusCode: http.StatusInternalServerError,
+		},
+		"execute-again-error": {
+			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
+				logger.Info("Request received", "request", req)
+				return nil, fmt.Errorf("%w: %s", sdk.NewErrExecuteAgain("execute again", map[string]interface{}{"key": "value"}), "wrapping error")
+			},
+			err: sdk.ErrFunction{
+				Message: "execute again: wrapping error",
+				ErrCode: sdk.ErrCodeExecuteAgain,
+				Data:    map[string]interface{}{"key": "value"},
+			},
+			statusCode: http.StatusInternalServerError,
+		},
+	}
 
 	logs := make(map[string][]byte)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +111,12 @@ func TestFunctionSDK(t *testing.T) {
 		sdk.WithListener(listener),
 		sdk.WithHandler(
 			func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
-				logger.Info("Request received", "request", req)
-				panic(req)
+				if key, ok := req["key"].(string); ok {
+					if tc, ok := testcases[key]; ok {
+						return tc.handler(ctx, logger, req)
+					}
+				}
+				return nil, fmt.Errorf("handler not found")
 			},
 		),
 	)
@@ -53,48 +132,60 @@ func TestFunctionSDK(t *testing.T) {
 		}
 	}()
 
-	r := bytes.NewReader([]byte("{\"input1\": \"value1\"}"))
+	for key, tc := range testcases {
+		r := bytes.NewReader([]byte(fmt.Sprintf("{\"key\": \"%s\"}", key)))
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s", listener.Addr().String()), r)
-	if err != nil {
-		t.Errorf("Error creating request: %v", err)
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(sdk.ActivityIDHeader, "activity1")
-	req.Header.Set(sdk.EnvironmentIDHeader, "environment1")
-	req.Header.Set(sdk.EnvironmentNameHeader, "environment1Name")
-	req.Header.Set(sdk.EngineAPIEndpointHeader, server.URL)
-	req.Header.Set(sdk.ActivityFileUploadHeader, "/activity1/log")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Errorf("Error sending request: %v", err)
-		return
-	}
-
-	if resp.StatusCode == http.StatusInternalServerError {
-		if resp.Body != nil {
-			defer resp.Body.Close()
-			functionErr := new(sdk.ErrFunction)
-			err := json.NewDecoder(resp.Body).Decode(&functionErr)
-			if err != nil {
-				t.Errorf("Error decoding error response: %v", err)
-			}
-		} else {
-			t.Errorf("Unexpected response: %v", resp.Status)
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s", listener.Addr().String()), r)
+		if err != nil {
+			t.Errorf("Error creating request: %v", err)
+			return
 		}
-	}
-	if resp.StatusCode == http.StatusOK {
-		if resp.Body != nil {
-			defer resp.Body.Close()
-			var result sdk.Response
-			err := json.NewDecoder(resp.Body).Decode(&result)
-			if err != nil {
-				t.Errorf("Error decoding response: %v", err)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set(sdk.ActivityIDHeader, "activity1")
+		req.Header.Set(sdk.EnvironmentIDHeader, "environment1")
+		req.Header.Set(sdk.EnvironmentNameHeader, "environment1Name")
+		req.Header.Set(sdk.EngineAPIEndpointHeader, server.URL)
+		req.Header.Set(sdk.ActivityFileUploadHeader, "/activity1/log")
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Errorf("Error sending request: %v", err)
+			return
+		}
+
+		if resp.StatusCode == http.StatusInternalServerError {
+			if resp.Body != nil {
+				defer resp.Body.Close()
+				var functionErr sdk.ErrFunction
+				err := json.NewDecoder(resp.Body).Decode(&functionErr)
+				if err != nil {
+					t.Errorf("Error decoding error response: %v", err)
+				}
+				if diff := cmp.Diff(tc.err, functionErr,
+					cmpopts.IgnoreFields(sdk.ErrFunction{}, "StackTrace")); diff != "" {
+					t.Errorf("Unexpected error response: %s", diff)
+				}
+				if strings.Contains(key, "panic") && len(functionErr.StackTrace) == 0 {
+					t.Errorf("Expected stack trace in error response")
+				}
+			} else {
+				t.Errorf("Unexpected empty response")
 			}
-		} else {
-			t.Errorf("Unexpected response: %v", resp.Status)
+		}
+		if resp.StatusCode == http.StatusOK {
+			if resp.Body != nil {
+				defer resp.Body.Close()
+				var result sdk.Response
+				err := json.NewDecoder(resp.Body).Decode(&result)
+				if err != nil {
+					t.Errorf("Error decoding response: %v", err)
+				}
+				if diff := cmp.Diff(tc.response, result); diff != "" {
+					t.Errorf("Unexpected response: %s", diff)
+				}
+			} else {
+				t.Errorf("Unexpected empty response")
+			}
 		}
 	}
 

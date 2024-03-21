@@ -5,7 +5,7 @@ import requests
 from logging import Logger
 from python_sdk_rafay_workflow import sdk
 from python_sdk_rafay_workflow import const as sdk_const
-from .jira import handle
+from .jira import handle, approve_issue
 import backoff
 
 # from waitress import serve
@@ -30,6 +30,7 @@ class TestSDK(unittest.TestCase):
         app.testing = True
         self.client = app.test_client()
         self.function_url = "/"
+        self.data = {}
         # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
         
         
@@ -44,21 +45,26 @@ class TestSDK(unittest.TestCase):
     def test_jira(self):
         self.activity_api.expect_request("/jira-func").respond_with_data("")
         resp = self.call_function()
-        self.assertEqual(resp.json, {"message": "Hello, World!"})
+        self.assertEqual(resp.json, {"status": "Approved"})
 
     @staticmethod
     def _retry(resp):
-        return resp.json["errorCode"] == 1
+        if resp.status_code == 500:
+            # approve after 2 retries
+            if 'data' in resp.json and resp.json['data'].get('counter', 0) == 2:
+                approve_issue(resp.json['data'].get('ticket_id'))
+            return resp.json["error_code"] != sdk.ERROR_CODE_FAILED
 
-    @backoff.on_predicate(backoff.expo, _retry)
+    @backoff.on_predicate(backoff.expo, _retry, max_tries=5)
     def call_function(self):
-        resp = self.client.post(self.function_url, json={"foo": "bar"}, headers={
+        resp = self.client.post(self.function_url, json=self.data, headers={
             sdk_const.EngineAPIEndpointHeader: self.activity_api.url_for("/"),
             sdk_const.ActivityFileUploadHeader: "jira-func",
             sdk_const.WorkflowTokenHeader: "token",
             sdk_const.ActivityIDHeader: "activityID",
             sdk_const.EnvironmentIDHeader: "environmentID",
             })
+        self.data["previous"] = resp.json.get("data", {})
         return resp
     
 if __name__ == "__main__":

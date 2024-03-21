@@ -4,12 +4,13 @@ ERROR_CODE_FAILED = 2
 ERROR_CODE_TRANSIENT = 3
 
 class FunctionException(Exception):
-    def __init__(self, message, code=ERROR_CODE_FAILED):
+    def __init__(self, message, error_code=ERROR_CODE_FAILED):
         self.message = message
-        self.code = code
+        self.error_code = error_code
 
 class ExecuteAgainException(FunctionException):
-    def __init__(self, message):
+    def __init__(self, message, **kwargs):
+        self.data = kwargs
         super().__init__("function: execute again: {}".format(message), ERROR_CODE_EXECUTE_AGAIN)
 
 class FailedException(FunctionException):
