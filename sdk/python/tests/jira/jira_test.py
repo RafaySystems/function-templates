@@ -5,19 +5,14 @@ import requests
 from logging import Logger
 from python_sdk_rafay_workflow import sdk
 from python_sdk_rafay_workflow import const as sdk_const
+from .jira import handle
+import backoff
 
-from waitress import serve
+# from waitress import serve
 import socket
 from contextlib import closing
-import threading
-import multiprocessing
-
-def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
-    logger.info("inside function handler1, activityID: %s" % (request["metadata"]["activityID"]))
-    logger.info("inside function handler2, activityID: %s" % (request["metadata"]["activityID"]))
-    return {
-       "message": "Hello, World!"
-    }
+# import threading
+# import multiprocessing
 
 def find_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
@@ -32,29 +27,39 @@ class TestSDK(unittest.TestCase):
         self.activity_api = httpserver.HTTPServer()
         app = sdk._get_app(handle)
         port = find_free_port()
-        self.function_url = f"http://127.0.0.1:{port}"
-        self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
+        app.testing = True
+        self.client = app.test_client()
+        self.function_url = "/"
+        # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
         
         
     def setUp(self) -> None:
         self.activity_api.start()
-        self.function_server.start()
+        # self.function_server.start()
 
     def tearDown(self) -> None:
         self.activity_api.stop()
-        self.function_server.terminate()
+        # self.function_server.terminate()
+    
+    def test_jira(self):
+        self.activity_api.expect_request("/jira-func").respond_with_data("")
+        resp = self.call_function()
+        self.assertEqual(resp.json, {"message": "Hello, World!"})
 
+    @staticmethod
+    def _retry(resp):
+        return resp.json["errorCode"] == 1
 
-    def test_sdk(self):
-        self.activity_api.expect_request("/foobar").respond_with_data("")
-        resp = requests.post(self.function_url, json={"foo": "bar"}, headers={
+    @backoff.on_predicate(backoff.expo, _retry)
+    def call_function(self):
+        resp = self.client.post(self.function_url, json={"foo": "bar"}, headers={
             sdk_const.EngineAPIEndpointHeader: self.activity_api.url_for("/"),
-            sdk_const.ActivityFileUploadHeader: "foobar",
+            sdk_const.ActivityFileUploadHeader: "jira-func",
             sdk_const.WorkflowTokenHeader: "token",
             sdk_const.ActivityIDHeader: "activityID",
             sdk_const.EnvironmentIDHeader: "environmentID",
             })
-        self.assertEqual(resp.json(), {"message": "Hello, World!"})
-        
+        return resp
+    
 if __name__ == "__main__":
     unittest.main()
