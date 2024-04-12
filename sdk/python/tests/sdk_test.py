@@ -32,29 +32,31 @@ class TestSDK(unittest.TestCase):
         self.activity_api = httpserver.HTTPServer()
         app = sdk._get_app(handle)
         port = find_free_port()
-        self.function_url = f"http://127.0.0.1:{port}"
-        self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
+        app.testing = True
+        self.client = app.test_client()
+        self.function_url = "/"
+        # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
         
         
     def setUp(self) -> None:
         self.activity_api.start()
-        self.function_server.start()
+        # self.function_server.start()
 
     def tearDown(self) -> None:
         self.activity_api.stop()
-        self.function_server.terminate()
+        # self.function_server.terminate()
 
 
     def test_sdk(self):
         self.activity_api.expect_request("/foobar").respond_with_data("")
-        resp = requests.post(self.function_url, json={"foo": "bar"}, headers={
+        resp = self.client.post(self.function_url, json={"foo": "bar"}, headers={
             sdk_const.EngineAPIEndpointHeader: self.activity_api.url_for("/"),
             sdk_const.ActivityFileUploadHeader: "foobar",
             sdk_const.WorkflowTokenHeader: "token",
             sdk_const.ActivityIDHeader: "activityID",
             sdk_const.EnvironmentIDHeader: "environmentID",
             })
-        self.assertEqual(resp.json(), {"message": "Hello, World!"})
+        self.assertEqual(resp.json, {"data":{"message": "Hello, World!"}})
         
 if __name__ == "__main__":
     unittest.main()

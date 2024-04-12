@@ -24,6 +24,7 @@ func main() {
 	functionSDK, err := sdk.NewFunctionSDK(
 		sdk.WithReadTimeout(readTimeout),
 		sdk.WithWriteTimeout(writeTimeout),
+		sdk.WithPort(8082),
 		sdk.WithHandler(function.Handle))
 	if err != nil {
 		fmt.Println("Error creating function SDK: ", err)

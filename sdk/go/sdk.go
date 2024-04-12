@@ -287,11 +287,14 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 		}
 
 		var req Request
-		err := json.Unmarshal(input, &req)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Invalid input"))
-			return
+
+		if len(input) > 0 {
+			err := json.Unmarshal(input, &req)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("Invalid input"))
+				return
+			}
 		}
 
 		if req == nil {
@@ -324,7 +327,7 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			w.WriteHeader(http.StatusOK)
 		}
 
-		err = json.NewEncoder(w).Encode(result)
+		err = json.NewEncoder(w).Encode(map[string]any{"data": result})
 		if err != nil {
 			logger.Error("Error in encoding response", "error", err)
 		}

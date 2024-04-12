@@ -175,12 +175,14 @@ func TestFunctionSDK(t *testing.T) {
 		if resp.StatusCode == http.StatusOK {
 			if resp.Body != nil {
 				defer resp.Body.Close()
-				var result sdk.Response
+				var result struct {
+					Data sdk.Response `json:"data"`
+				}
 				err := json.NewDecoder(resp.Body).Decode(&result)
 				if err != nil {
 					t.Errorf("Error decoding response: %v", err)
 				}
-				if diff := cmp.Diff(tc.response, result); diff != "" {
+				if diff := cmp.Diff(tc.response, result.Data); diff != "" {
 					t.Errorf("Unexpected response: %s", diff)
 				}
 			} else {

@@ -2,6 +2,8 @@ github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx6
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240313034542-50e1c7c3c614 h1:FSCvT0s2PEez12movfKgfxvIeTZr5LU6uF1wx09NKWY=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240313034542-50e1c7c3c614/go.mod h1:yMPH7lxqUc/Y8LChkk9+6ER0LBelXO5lDw/8spsee/s=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240321222736-7f7f28a3381b h1:fqKPlefckErGcitBAj8EQy0caabBHiO58EZbnjgWi04=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240321222736-7f7f28a3381b/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=

@@ -45,7 +45,7 @@ class TestSDK(unittest.TestCase):
     def test_jira(self):
         self.activity_api.expect_request("/jira-func").respond_with_data("")
         resp = self.call_function()
-        self.assertEqual(resp.json, {"status": "Approved"})
+        self.assertEqual(resp.json, {"data":{"status": "Approved"}})
 
     @staticmethod
     def _retry(resp):

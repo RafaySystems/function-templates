@@ -60,6 +60,6 @@ ENV fprocess="./handler"
 ENV mode="http"
 ENV upstream_url="http://127.0.0.1:8082"
 ENV prefix_logs="false"
-ENV ready_path="/-/ready"
+ENV ready_path="/_/ready"
 
 CMD ["./fwatchdog"]
