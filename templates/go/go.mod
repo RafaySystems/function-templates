@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088
-	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240312184726-9fdcaf623979
+	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240412072157-eb2ce38cadd3
 )
 
 require (
