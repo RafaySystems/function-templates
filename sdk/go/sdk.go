@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"os"
@@ -217,34 +218,30 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		piper, pipew := io.Pipe()
-
-		logger := slog.New(slog.NewTextHandler(pipew, &slog.HandlerOptions{
-			AddSource: true,
-			Level:     fsdk.logLevel,
-		}))
-
 		activityID := r.Header.Get(ActivityIDHeader)
 		environmentID := r.Header.Get(EnvironmentIDHeader)
 		environmentName := r.Header.Get(EnvironmentNameHeader)
 		engineEndpoint := r.Header.Get(EngineAPIEndpointHeader)
 		fileUploadPath := r.Header.Get(ActivityFileUploadHeader)
 
-		logger.With("activityID", activityID).
-			With("environmentID", environmentID).
-			With("environmentName", environmentName)
+		piper, pipew := io.Pipe()
+		writer := multipart.NewWriter(pipew)
+		defer func() {
+			writer.Close()
+			pipew.Close()
+			piper.Close()
+		}()
 
 		path := engineEndpoint + fileUploadPath
 
 		req, err := http.NewRequestWithContext(r.Context(), "POST", path, piper)
 		if err != nil {
 			fsdk.logger.Info("Error creating request", "error", err, "path", path)
-			pipew.Close()
-			piper.Close()
 			return
 		}
 
 		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
+		req.Header.Add("Content-Type", writer.FormDataContentType())
 
 		var wg sync.WaitGroup
 		wg.Add(1)
@@ -260,9 +257,26 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 			}
 		}()
 
+		part, err := writer.CreateFormFile("content", "stdout")
+		if err != nil {
+			fsdk.logger.Info("Error creating form field for logging", "error", err)
+			return
+		}
+
+		logger := slog.New(slog.NewTextHandler(part, &slog.HandlerOptions{
+			AddSource: true,
+			Level:     fsdk.logLevel,
+		}))
+		logger = logger.With("activityID", activityID).
+			With("environmentID", environmentID).
+			With("environmentName", environmentName)
+		fsdk.logger.Info("invoking function", "activityID", activityID, "environmentID", environmentID, "environmentName", environmentName)
+		logger.Info("invoking function")
+
 		handler := fsdk.makeRequestHandler(logger)
 		handler(w, r)
 
+		writer.Close()
 		pipew.Close()
 		wg.Wait()
 	}

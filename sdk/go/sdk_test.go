@@ -95,7 +95,22 @@ func TestFunctionSDK(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Body != nil {
 			defer r.Body.Close()
-			bodyBytes, _ := io.ReadAll(r.Body)
+			reader, err := r.MultipartReader()
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			part, err := reader.NextPart()
+			if err != nil {
+				if err == io.EOF {
+					return
+				}
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			defer part.Close()
+			bodyBytes, _ := io.ReadAll(part)
 			logs[r.URL.Path] = bodyBytes
 		}
 		w.WriteHeader(http.StatusOK)
@@ -145,7 +160,7 @@ func TestFunctionSDK(t *testing.T) {
 		req.Header.Set(sdk.EnvironmentIDHeader, "environment1")
 		req.Header.Set(sdk.EnvironmentNameHeader, "environment1Name")
 		req.Header.Set(sdk.EngineAPIEndpointHeader, server.URL)
-		req.Header.Set(sdk.ActivityFileUploadHeader, "/activity1/log")
+		req.Header.Set(sdk.ActivityFileUploadHeader, fmt.Sprintf("/activity/%s/log", key))
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -188,6 +203,13 @@ func TestFunctionSDK(t *testing.T) {
 			} else {
 				t.Errorf("Unexpected empty response")
 			}
+		}
+	}
+
+	// check logs if empty
+	for _, log := range logs {
+		if len(log) == 0 {
+			t.Errorf("Expected log to be non-empty")
 		}
 	}
 
