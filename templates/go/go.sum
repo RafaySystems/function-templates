@@ -1,9 +1,13 @@
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx65AqqDVpFEx+Rl6FJ1Oy/nX+BH/THvTLXn95CM=
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
+github.com/RafaySystems/function-templates v0.0.0-20240521131520-12743ad00e04 h1:U0Ot7eL5JqOEGQKy/AtOoiRusnORPsQU6ZAlJvN11BI=
+github.com/RafaySystems/function-templates v0.0.0-20240521131520-12743ad00e04/go.mod h1:gVgOBYLsM2S7wVeLLAzhCyrA2+4DdYz1ttRualBxqj4=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240312184726-9fdcaf623979 h1:+j3AJnarVmFxteGy8Ous6eoMYkq9VsTrkIqsvjPemmA=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240312184726-9fdcaf623979/go.mod h1:yMPH7lxqUc/Y8LChkk9+6ER0LBelXO5lDw/8spsee/s=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240412072157-eb2ce38cadd3 h1:RPwGPdfocr+iAHL7lxCJJztdgkfUm3LL70BnA7uhsSo=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240412072157-eb2ce38cadd3/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240521131520-12743ad00e04 h1:GOb/PPiepL6jBxc23CGJ1ToxpyEdwCesdUNeTsbaPX8=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240521131520-12743ad00e04/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=
 github.com/hashicorp/go-cleanhttp v0.5.2/go.mod h1:kO/YDlP8L1346E6Sodw+PrpBSV4/SoxCXGY6BqNFT48=
