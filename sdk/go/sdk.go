@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"net"
 	"net/http"
 	"os"
@@ -34,6 +33,8 @@ type SDKOptions struct {
 	HealthInterval      time.Duration
 	LogLevel            slog.Level
 	LogUploadRetryCount int
+	LogFlushRate        time.Duration
+	SkipTLSVerify       bool
 }
 
 type SDKOption func(*SDKOptions)
@@ -93,6 +94,18 @@ func WithShutdownTimeout(shutdownTimeout time.Duration) SDKOption {
 	}
 }
 
+func WithLogFlushRate(logFlushRate time.Duration) SDKOption {
+	return func(o *SDKOptions) {
+		o.HealthInterval = logFlushRate
+	}
+}
+
+func WithServerSkipTLSVerify(skipTLSVerify bool) SDKOption {
+	return func(o *SDKOptions) {
+		o.SkipTLSVerify = skipTLSVerify
+	}
+}
+
 func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 	options := &SDKOptions{
 		Port:                5000,
@@ -104,6 +117,8 @@ func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 		LogLevel:            slog.LevelInfo,
 		LogUploadRetryCount: 3,
 		ShutdownTimeout:     10 * time.Second,
+		LogFlushRate:        1 * time.Second,
+		SkipTLSVerify:       false,
 	}
 
 	for _, o := range opts {
@@ -132,6 +147,8 @@ func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 		logLevel:        options.LogLevel,
 		shutdownTimeout: options.ShutdownTimeout,
 		client:          httputil.NewRetriableHTTPClient(httputil.WithMaxRetryCount(options.LogUploadRetryCount)).StandardClient(),
+		logFlushRate:    options.LogFlushRate,
+		skipTLSVerify:   options.SkipTLSVerify,
 	}, nil
 
 }
@@ -147,6 +164,8 @@ type FunctionSDK struct {
 	logLevel        slog.Level
 	client          *http.Client
 	shutdownTimeout time.Duration
+	logFlushRate    time.Duration
+	skipTLSVerify   bool
 }
 
 func (fsdk *FunctionSDK) Run(ctx context.Context) error {
@@ -217,68 +236,33 @@ func (fsdk *FunctionSDK) Run(ctx context.Context) error {
 func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		activityID := r.Header.Get(ActivityIDHeader)
 		environmentID := r.Header.Get(EnvironmentIDHeader)
 		environmentName := r.Header.Get(EnvironmentNameHeader)
 		engineEndpoint := r.Header.Get(EngineAPIEndpointHeader)
 		fileUploadPath := r.Header.Get(ActivityFileUploadHeader)
 
-		piper, pipew := io.Pipe()
-		writer := multipart.NewWriter(pipew)
-		defer func() {
-			writer.Close()
-			pipew.Close()
-			piper.Close()
-		}()
+		currLogger := fsdk.logger.With("activityID", activityID).
+			With("environmentID", environmentID).
+			With("environmentName", environmentName)
 
-		path := engineEndpoint + fileUploadPath
+		url := engineEndpoint + fileUploadPath
+		logWriter := NewActivityLogWriter(r.Context(), currLogger, url, r.Header.Get(WorkflowTokenHeader), WithWriteFlushTickRate(fsdk.logFlushRate), WithSkipTLSVerify(fsdk.skipTLSVerify))
+		defer logWriter.Close()
 
-		req, err := http.NewRequestWithContext(r.Context(), "POST", path, piper)
-		if err != nil {
-			fsdk.logger.Info("Error creating request", "error", err, "path", path)
-			return
-		}
-
-		req.Header.Add(WorkflowTokenHeader, r.Header.Get(WorkflowTokenHeader))
-		req.Header.Add("Content-Type", writer.FormDataContentType())
-
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			resp, err := fsdk.client.Do(req)
-			if err != nil {
-				fsdk.logger.Info("Error in file upload", "error", err)
-				return
-			}
-			if resp.Body != nil {
-				defer resp.Body.Close()
-			}
-		}()
-
-		part, err := writer.CreateFormFile("content", "stdout")
-		if err != nil {
-			fsdk.logger.Info("Error creating form field for logging", "error", err)
-			return
-		}
-
-		logger := slog.New(slog.NewTextHandler(part, &slog.HandlerOptions{
+		logger := slog.New(slog.NewTextHandler(logWriter, &slog.HandlerOptions{
 			AddSource: true,
 			Level:     fsdk.logLevel,
 		}))
 		logger = logger.With("activityID", activityID).
 			With("environmentID", environmentID).
 			With("environmentName", environmentName)
-		fsdk.logger.Info("invoking function", "activityID", activityID, "environmentID", environmentID, "environmentName", environmentName)
 		logger.Info("invoking function")
+
+		currLogger.Info("invoking function")
 
 		handler := fsdk.makeRequestHandler(logger)
 		handler(w, r)
-
-		writer.Close()
-		pipew.Close()
-		wg.Wait()
 	}
 
 }

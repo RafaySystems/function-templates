@@ -1,5 +1,8 @@
 from typing import *
 import pytest_httpserver as httpserver
+from werkzeug.wrappers import Response
+from requests_toolbelt.multipart import decoder
+import time
 import unittest
 import requests
 from logging import Logger
@@ -15,6 +18,8 @@ import multiprocessing
 def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("inside function handler1, activityID: %s" % (request["metadata"]["activityID"]))
     logger.info("inside function handler2, activityID: %s" % (request["metadata"]["activityID"]))
+    for key in range(10):
+        logger.info("inside function handler %s, activityID: %s" % (key, request["metadata"]["activityID"]))
     return {
        "message": "Hello, World!"
     }
@@ -36,8 +41,7 @@ class TestSDK(unittest.TestCase):
         self.client = app.test_client()
         self.function_url = "/"
         # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
-        
-        
+
     def setUp(self) -> None:
         self.activity_api.start()
         # self.function_server.start()
@@ -46,9 +50,8 @@ class TestSDK(unittest.TestCase):
         self.activity_api.stop()
         # self.function_server.terminate()
 
-
     def test_sdk(self):
-        self.activity_api.expect_request("/foobar").respond_with_data("")
+        self.activity_api.expect_request("/foobar").respond_with_response(Response(status=200))
         resp = self.client.post(self.function_url, json={"foo": "bar"}, headers={
             sdk_const.EngineAPIEndpointHeader: self.activity_api.url_for("/"),
             sdk_const.ActivityFileUploadHeader: "foobar",

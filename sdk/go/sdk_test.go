@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 	"github.com/google/go-cmp/cmp"
@@ -28,6 +29,10 @@ func TestFunctionSDK(t *testing.T) {
 		"success": {
 			handler: func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
 				logger.Info("Request received", "request", req)
+				for i := 0; i < 10; i++ {
+					logger.Info("Log message", "i", i)
+					time.Sleep(1 * time.Second)
+				}
 				return sdk.Response{"output1": "value1"}, nil
 			},
 			response:   sdk.Response{"output1": "value1"},
@@ -111,7 +116,7 @@ func TestFunctionSDK(t *testing.T) {
 			}
 			defer part.Close()
 			bodyBytes, _ := io.ReadAll(part)
-			logs[r.URL.Path] = bodyBytes
+			logs[r.URL.Path] = append(logs[r.URL.Path], bodyBytes...)
 		}
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -124,6 +129,8 @@ func TestFunctionSDK(t *testing.T) {
 	}
 	funcSDK, err := sdk.NewFunctionSDK(
 		sdk.WithListener(listener),
+		sdk.WithReadTimeout(20*time.Second),
+		sdk.WithWriteTimeout(20*time.Second),
 		sdk.WithHandler(
 			func(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
 				if key, ok := req["key"].(string); ok {

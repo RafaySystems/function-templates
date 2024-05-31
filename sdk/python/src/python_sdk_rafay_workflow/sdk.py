@@ -12,7 +12,7 @@ from .errors import *
 
 FUNCTION_NAME=os.environ.get('FUNCTION_NAME', 'default-function-name')
 LOG_LEVEL=os.environ.get('LOG_LEVEL', 'INFO')
-LOG_BUFFER_CAPACITY=int(os.environ.get('LOG_BUFFER_CAPACITY', "1000"))
+LOG_BUFFER_CAPACITY=int(os.environ.get('LOG_BUFFER_CAPACITY', "10"))
 
 _logger = logging.Logger(FUNCTION_NAME)
 _handler = logging.StreamHandler(stream=sys.stdout)
