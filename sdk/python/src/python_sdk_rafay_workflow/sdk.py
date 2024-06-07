@@ -32,6 +32,7 @@ def log(f):
 
         endpoint = engineEndpoint + fileUploadPath
         logging_handler = ActivityLogHandler(endpoint=endpoint, token=token, capacity=LOG_BUFFER_CAPACITY)
+        logging_handler.setFormatter(logging.Formatter("time=%(asctime)s level=%(levelname)s path=%(pathname)s line=%(lineno)d msg=%(message)s"))
         logger.setLevel(LOG_LEVEL)
         logger.info(f"calling function: {FUNCTION_NAME}")
         logger.addHandler(logging_handler)

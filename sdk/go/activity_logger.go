@@ -25,7 +25,7 @@ type writer struct {
 	flushTickRate time.Duration
 	client        *http.Client
 	skipTLSVerify bool
-	writeTimeout  time.Duration
+	reqTimeout    time.Duration
 
 	buf []byte
 
@@ -46,9 +46,9 @@ var WithSkipTLSVerify = func(skipTLSVerify bool) WriterOption {
 	}
 }
 
-var WithLogWriteTimeout = func(writeTimeout time.Duration) WriterOption {
+var WithLogReqTimeout = func(reqTimeout time.Duration) WriterOption {
 	return func(w *writer) {
-		w.writeTimeout = writeTimeout
+		w.reqTimeout = reqTimeout
 	}
 }
 
@@ -129,7 +129,7 @@ func (w *writer) flush() error {
 			piper.Close()
 		}()
 
-		ctx, cancel := context.WithTimeout(w.ctx, w.writeTimeout)
+		ctx, cancel := context.WithTimeout(w.ctx, w.reqTimeout)
 		defer cancel()
 		group, gctx := errgroup.WithContext(ctx)
 

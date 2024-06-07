@@ -34,6 +34,7 @@ type SDKOptions struct {
 	LogLevel            slog.Level
 	LogUploadRetryCount int
 	LogFlushRate        time.Duration
+	LogWriteTimeout     time.Duration
 	SkipTLSVerify       bool
 }
 
@@ -66,6 +67,12 @@ func WithReadTimeout(readTimeout time.Duration) SDKOption {
 func WithWriteTimeout(writeTimeout time.Duration) SDKOption {
 	return func(o *SDKOptions) {
 		o.WriteTimeout = writeTimeout
+	}
+}
+
+func WithLogWriteTimeout(logWriteTimeout time.Duration) SDKOption {
+	return func(o *SDKOptions) {
+		o.LogWriteTimeout = logWriteTimeout
 	}
 }
 
@@ -148,6 +155,7 @@ func NewFunctionSDK(opts ...SDKOption) (*FunctionSDK, error) {
 		shutdownTimeout: options.ShutdownTimeout,
 		client:          httputil.NewRetriableHTTPClient(httputil.WithMaxRetryCount(options.LogUploadRetryCount)).StandardClient(),
 		logFlushRate:    options.LogFlushRate,
+		logWriteTimeout: options.LogWriteTimeout,
 		skipTLSVerify:   options.SkipTLSVerify,
 	}, nil
 
@@ -165,6 +173,7 @@ type FunctionSDK struct {
 	client          *http.Client
 	shutdownTimeout time.Duration
 	logFlushRate    time.Duration
+	logWriteTimeout time.Duration
 	skipTLSVerify   bool
 }
 
@@ -247,7 +256,7 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 			With("environmentName", environmentName)
 
 		url := engineEndpoint + fileUploadPath
-		logWriter := NewActivityLogWriter(r.Context(), currLogger, url, r.Header.Get(WorkflowTokenHeader), WithWriteFlushTickRate(fsdk.logFlushRate), WithSkipTLSVerify(fsdk.skipTLSVerify))
+		logWriter := NewActivityLogWriter(r.Context(), currLogger, url, r.Header.Get(WorkflowTokenHeader), WithLogReqTimeout(fsdk.logWriteTimeout), WithWriteFlushTickRate(fsdk.logFlushRate), WithSkipTLSVerify(fsdk.skipTLSVerify))
 		defer logWriter.Close()
 
 		logger := slog.New(slog.NewTextHandler(logWriter, &slog.HandlerOptions{
