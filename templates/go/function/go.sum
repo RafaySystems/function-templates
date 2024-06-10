@@ -2,6 +2,10 @@ github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx6
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240531113047-de615946ec9b h1:d/HtsnKMcDQPCZHOjmifZxkB9+XI78FhHdQor1dK4mQ=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240531113047-de615946ec9b/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240531113629-80514ef78be5 h1:fvNBkB40r9BnTQcAfhPhxFlhGqG3J/X4VvjYcPmlh8c=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240531113629-80514ef78be5/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240607075618-025a48e5ce1b h1:h6X7WA9J9Uj6tsooI+nlxFBWqogn2PfLz6BagmWIl/o=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240607075618-025a48e5ce1b/go.mod h1:3ljHM6OkxLdJB80ZzsQsPseJgxVtT9Ow4SqpXZApOAE=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=

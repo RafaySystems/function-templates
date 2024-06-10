@@ -14,29 +14,42 @@ FUNCTION_NAME=os.environ.get('FUNCTION_NAME', 'default-function-name')
 LOG_LEVEL=os.environ.get('LOG_LEVEL', 'INFO')
 LOG_BUFFER_CAPACITY=int(os.environ.get('LOG_BUFFER_CAPACITY', "10"))
 
+_format = "time=%(asctime)s level=%(levelname)s path=%(pathname)s line=%(lineno)d msg=%(message)s"
 _logger = logging.Logger(FUNCTION_NAME)
 _handler = logging.StreamHandler(stream=sys.stdout)
-_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+_formatter = logging.Formatter(_format)
 _handler.setFormatter(_formatter)
 _logger.addHandler(_handler)
 _handler.setLevel(LOG_LEVEL)
 
 def log(f):
     def wrap(*args, **kwargs):
-        logger = logging.Logger(__name__)
+        activity_id = request.headers.get(ActivityIDHeader, default="", type=str)
+        environment_id = request.headers.get(EnvironmentIDHeader, default="", type=str)
+        environment_name = request.headers.get(EnvironmentNameHeader, default="", type=str)
+        engine_endpoint= request.headers.get(EngineAPIEndpointHeader, type=str)
+        file_upload_path= request.headers.get(ActivityFileUploadHeader, type=str)
 
-        engineEndpoint= request.headers.get(EngineAPIEndpointHeader, type=str)
-        fileUploadPath= request.headers.get(ActivityFileUploadHeader, type=str)
+        logger = logging.Logger(activity_id)
+        extra = {
+            "activity_id": activity_id,
+            "environment_id": environment_id,
+            "environment_name": environment_name,
+        }
 
         token = request.headers.get(WorkflowTokenHeader)
 
-        endpoint = engineEndpoint + fileUploadPath
+        endpoint = engine_endpoint + file_upload_path
         logging_handler = ActivityLogHandler(endpoint=endpoint, token=token, capacity=LOG_BUFFER_CAPACITY)
-        logging_handler.setFormatter(logging.Formatter("time=%(asctime)s level=%(levelname)s path=%(pathname)s line=%(lineno)d msg=%(message)s"))
+        logging_handler.setFormatter(logging.Formatter(_format))
         logger.setLevel(LOG_LEVEL)
-        logger.info(f"calling function: {FUNCTION_NAME}")
         logger.addHandler(logging_handler)
-        resp = f(logger=logger, *args, **kwargs)
+        logger.info(f"invoking function: {FUNCTION_NAME}")
+
+        local_logger = logging.LoggerAdapter(_logger, extra)
+        local_logger.info(f"invoking function: activity_id={activity_id}, environment_id={environment_id}, environment_name={environment_name}")
+
+        resp = f(logger=logging.LoggerAdapter(logger, extra), *args, **kwargs)
         logging_handler.close()
         return resp
     return wrap
@@ -59,7 +72,7 @@ def handle(handler, logger=None) -> Tuple[Dict[str, Any], int]:
             "activityID": request.headers.get(ActivityIDHeader),
             "environmentID": request.headers.get(EnvironmentIDHeader),
             "environmentName": request.headers.get(EnvironmentNameHeader),
-        }  
+        }
         resp = handler(logger, req)
         resp, status_code = jsonify({"data": resp}), 200
     except ExecuteAgainException as e:
@@ -81,8 +94,6 @@ def _get_app(handler):
 
 def serve_function(handler, host='0.0.0.0', port=5000, ):
     _logger.info(f'Starting Python Function {FUNCTION_NAME} ...')
-
-    app = _get_app(handler)
 
     app = Flask(FUNCTION_NAME)
 

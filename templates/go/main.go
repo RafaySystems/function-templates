@@ -20,10 +20,14 @@ const defaultTimeout = 10 * time.Second
 func main() {
 	readTimeout := parseIntOrDurationValue(os.Getenv("read_timeout"), defaultTimeout)
 	writeTimeout := parseIntOrDurationValue(os.Getenv("write_timeout"), defaultTimeout)
+	skipTLSVerify := os.Getenv("skip_tls_verify") == "true"
 
 	functionSDK, err := sdk.NewFunctionSDK(
 		sdk.WithReadTimeout(readTimeout),
 		sdk.WithWriteTimeout(writeTimeout),
+		sdk.WithLogFlushRate(1*time.Second),
+		sdk.WithLogWriteTimeout(10*time.Second),
+		sdk.WithServerSkipTLSVerify(skipTLSVerify),
 		sdk.WithPort(8082),
 		sdk.WithHandler(function.Handle))
 	if err != nil {

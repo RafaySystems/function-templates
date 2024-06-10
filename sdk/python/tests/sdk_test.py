@@ -51,7 +51,7 @@ class TestSDK(unittest.TestCase):
         # self.function_server.terminate()
 
     def test_sdk(self):
-        self.activity_api.expect_request("/foobar").respond_with_response(Response(status=200))
+        self.activity_api.expect_request("/foobar").respond_with_handler(my_custom_handler)
         resp = self.client.post(self.function_url, json={"foo": "bar"}, headers={
             sdk_const.EngineAPIEndpointHeader: self.activity_api.url_for("/"),
             sdk_const.ActivityFileUploadHeader: "foobar",
@@ -60,6 +60,17 @@ class TestSDK(unittest.TestCase):
             sdk_const.EnvironmentIDHeader: "environmentID",
             })
         self.assertEqual(resp.json, {"data":{"message": "Hello, World!"}})
-        
+
+def my_custom_handler(request):
+    if request.method == 'POST':
+        if request.headers.get('Content-Type') == 'application/json':
+            data = request.get_json()
+            response_data = {"received": data}
+            return 200, {"Content-Type": "application/json"}, response_data
+        else:
+            return 415, {"Content-Type": "text/plain"}, "Unsupported Media Type"
+    else:
+        return 405, {"Content-Type": "text/plain"}, "Method Not Allowed"
+
 if __name__ == "__main__":
     unittest.main()
