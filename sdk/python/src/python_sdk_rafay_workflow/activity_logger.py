@@ -16,7 +16,8 @@ class ActivityLogHandler(MemoryHandler):
         try:
             if len(self.buffer) > 0:
                 buf = [self.format(record) for record in self.buffer]
-                part = BytesIO('\n'.join(buf).encode('utf-8'))
+                joined_string = '\n'.join(buf) + '\n'
+                part = BytesIO(joined_string.encode('utf-8'))
                 files = {
                     'content': ('stdout', part, 'text/plain'),
                 }
