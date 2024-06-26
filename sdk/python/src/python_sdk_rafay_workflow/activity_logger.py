@@ -20,7 +20,7 @@ class ActivityLogHandler(MemoryHandler):
                 files = {
                     'content': ('stdout', part, 'text/plain'),
                 }
-                resp = requests.post(self.endpoint, headers={
+                resp = requests.post(f'{self.endpoint}?append=true', headers={
                     WorkflowTokenHeader: self.token,
                 }, files=files, timeout=self.timeout)
 
