@@ -1,0 +1,2 @@
+boto3==1.34.144
+python_sdk_rafay_workflow>=0.0.19

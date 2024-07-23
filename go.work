@@ -1,8 +1,9 @@
 go 1.22.0
 
 use (
-	./templates/go/function
 	./builder
+	./examples/go/helm
 	./sdk/go
 	./templates/go
+	./templates/go/function
 )
