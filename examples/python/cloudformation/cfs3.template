@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Simple S3 bucket creation example which outputs the bucket domain name
+Parameters:
+  BucketName:
+    Description: The S3 bucket to store the WordPress installation script
+    Type: String
+    Default: DOC-EXAMPLE-BUCKET
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref BucketName
+Outputs:
+  BucketDomainName:
+    Description: The domain name of the S3 bucket
+    Value: !GetAtt S3Bucket.DomainName
