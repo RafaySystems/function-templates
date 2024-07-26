@@ -1,3 +1,4 @@
-{{ range $value := .source_dependencies -}}
-{{ $value }}
+{{- range $value := .source_dependencies }}
+    {{ $value }}
+
 {{- end}}
