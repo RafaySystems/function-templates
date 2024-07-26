@@ -2,7 +2,7 @@
 // sources:
 // templates/go/Dockerfile (1.505kB)
 // templates/go/function/go.mod (376B)
-// templates/go/function/go.mod.tmpl (78B)
+// templates/go/function/go.mod.tmpl (84B)
 // templates/go/function/go.sum (2.21kB)
 // templates/go/function/handler.go (914B)
 // templates/go/go.mod (370B)
@@ -14,7 +14,7 @@
 // templates/python/function/__init__.py (0)
 // templates/python/function/handler.py (961B)
 // templates/python/function/requirements.txt (0)
-// templates/python/function/requirements.txt.tmpl (67B)
+// templates/python/function/requirements.txt.tmpl (72B)
 // templates/python/main.py (159B)
 // templates/python/requirements.txt (57B)
 
@@ -124,7 +124,7 @@ func templatesGoFunctionGoMod() (*asset, error) {
 	return a, nil
 }
 
-var _templatesGoFunctionGoModTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x2d\x2c\xcd\x2c\x4a\x55\xd0\xe0\xaa\xae\x56\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xd0\xad\xad\x05\xa9\x85\xaa\x02\x73\x74\x15\x52\xf3\x52\x6a\x6b\xb9\x34\x01\x01\x00\x00\xff\xff\x14\x02\x94\xe3\x4e\x00\x00\x00")
+var _templatesGoFunctionGoModTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x2d\x2c\xcd\x2c\x4a\x55\xd0\xe0\xaa\xae\xd6\x55\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xa8\xad\xe5\x52\x50\x50\x50\xa8\xae\x86\x29\xac\xad\xe5\x02\xeb\x4e\xcd\x4b\x01\xb1\x35\x01\x01\x00\x00\xff\xff\xe5\x67\xde\x62\x54\x00\x00\x00")
 
 func templatesGoFunctionGoModTmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -139,8 +139,8 @@ func templatesGoFunctionGoModTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/go/function/go.mod.tmpl", size: 78, mode: os.FileMode(0644), modTime: time.Unix(1710776299, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x79, 0x49, 0x15, 0x80, 0x0, 0x5, 0xe, 0x56, 0x34, 0xf6, 0xa8, 0xee, 0x5e, 0xb3, 0x4a, 0xdb, 0x96, 0xec, 0xb3, 0x32, 0x14, 0x33, 0xa1, 0x70, 0x2c, 0x3e, 0xcc, 0x29, 0x42, 0x70, 0x7d, 0xd0}}
+	info := bindataFileInfo{name: "templates/go/function/go.mod.tmpl", size: 84, mode: os.FileMode(0644), modTime: time.Unix(1721984595, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x60, 0x7, 0x35, 0x94, 0x13, 0xd0, 0xeb, 0x9c, 0x14, 0xbd, 0x97, 0x28, 0x1b, 0x7c, 0x89, 0x46, 0x7, 0xd, 0xda, 0x13, 0xbd, 0x4f, 0x65, 0x12, 0x11, 0x59, 0xfe, 0xc9, 0x7f, 0x5c, 0xc1, 0x79}}
 	return a, nil
 }
 
@@ -364,7 +364,7 @@ func templatesPythonFunctionRequirementsTxt() (*asset, error) {
 	return a, nil
 }
 
-var _templatesPythonFunctionRequirementsTxtTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xaa\xae\x56\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xd0\xad\xad\xe5\xaa\xae\x86\xa9\x02\x73\x74\x15\x52\xf3\x52\x6a\x6b\xb9\x00\x01\x00\x00\xff\xff\x86\x7b\x02\x07\x43\x00\x00\x00")
+var _templatesPythonFunctionRequirementsTxtTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xaa\xae\xd6\x55\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xa8\xad\xe5\x52\x50\x50\x50\xa8\xae\x86\x29\xac\xad\xe5\xe2\x02\xe9\x4e\xcd\x4b\xa9\xad\xe5\x02\x04\x00\x00\xff\xff\x93\xef\x05\x16\x48\x00\x00\x00")
 
 func templatesPythonFunctionRequirementsTxtTmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -379,8 +379,8 @@ func templatesPythonFunctionRequirementsTxtTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/python/function/requirements.txt.tmpl", size: 67, mode: os.FileMode(0644), modTime: time.Unix(1710776299, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x62, 0x49, 0xd, 0x2c, 0x62, 0x37, 0xb9, 0x46, 0xc4, 0x3a, 0xf7, 0x24, 0x1f, 0x7d, 0x6, 0x4e, 0x31, 0xce, 0xda, 0xcb, 0xf0, 0xe7, 0x5, 0x55, 0xe0, 0x2f, 0x8, 0x1c, 0x8f, 0xde, 0x41, 0x84}}
+	info := bindataFileInfo{name: "templates/python/function/requirements.txt.tmpl", size: 72, mode: os.FileMode(0644), modTime: time.Unix(1721984565, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xec, 0x8e, 0xe6, 0xa0, 0x5a, 0xfa, 0x1d, 0x66, 0x77, 0x44, 0x93, 0xa9, 0x16, 0x33, 0x8c, 0x4c, 0xb0, 0xd9, 0x3f, 0x47, 0x36, 0x91, 0xb3, 0xc9, 0x78, 0xa0, 0x80, 0x7b, 0xcf, 0xc6, 0x99, 0xa3}}
 	return a, nil
 }
 
