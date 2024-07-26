@@ -14,7 +14,7 @@
 // templates/python/function/__init__.py (0)
 // templates/python/function/handler.py (961B)
 // templates/python/function/requirements.txt (0)
-// templates/python/function/requirements.txt.tmpl (72B)
+// templates/python/function/requirements.txt.tmpl (68B)
 // templates/python/main.py (159B)
 // templates/python/requirements.txt (57B)
 
@@ -364,7 +364,7 @@ func templatesPythonFunctionRequirementsTxt() (*asset, error) {
 	return a, nil
 }
 
-var _templatesPythonFunctionRequirementsTxtTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xaa\xae\xd6\x55\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xa8\xad\xe5\x52\x50\x50\x50\xa8\xae\x86\x29\xac\xad\xe5\xe2\x02\xe9\x4e\xcd\x4b\xa9\xad\xe5\x02\x04\x00\x00\xff\xff\x93\xef\x05\x16\x48\x00\x00\x00")
+var _templatesPythonFunctionRequirementsTxtTmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xaa\xae\xd6\x55\x28\x4a\xcc\x4b\x4f\x55\x50\x29\x4b\xcc\x29\x4d\x55\xb0\xb2\x55\xd0\x2b\xce\x2f\x2d\x4a\x4e\x8d\x4f\x49\x2d\x48\xcd\x4b\x49\xcd\x4b\xce\x4c\x2d\x56\xa8\xad\xe5\xaa\xae\x86\x29\xaa\xad\xe5\xe2\x02\xe9\x4c\xcd\x4b\xa9\xad\xe5\x02\x04\x00\x00\xff\xff\x1c\xd5\x59\xbf\x44\x00\x00\x00")
 
 func templatesPythonFunctionRequirementsTxtTmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -379,8 +379,8 @@ func templatesPythonFunctionRequirementsTxtTmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/python/function/requirements.txt.tmpl", size: 72, mode: os.FileMode(0644), modTime: time.Unix(1721984565, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xec, 0x8e, 0xe6, 0xa0, 0x5a, 0xfa, 0x1d, 0x66, 0x77, 0x44, 0x93, 0xa9, 0x16, 0x33, 0x8c, 0x4c, 0xb0, 0xd9, 0x3f, 0x47, 0x36, 0x91, 0xb3, 0xc9, 0x78, 0xa0, 0x80, 0x7b, 0xcf, 0xc6, 0x99, 0xa3}}
+	info := bindataFileInfo{name: "templates/python/function/requirements.txt.tmpl", size: 68, mode: os.FileMode(0644), modTime: time.Unix(1721992347, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xa9, 0xda, 0x4b, 0x2c, 0x70, 0xc3, 0x2c, 0x80, 0x92, 0xd4, 0x0, 0x78, 0x67, 0xf4, 0x56, 0x2a, 0x47, 0x8c, 0xdf, 0x9a, 0x77, 0xa8, 0xb5, 0x1b, 0xd5, 0x3a, 0x36, 0x99, 0x35, 0x78, 0xe4, 0x65}}
 	return a, nil
 }
 
