@@ -1,4 +1,4 @@
-{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/4e50404e2f3403b020ac59986fcb517a0e7b119f.tar.gz") { } }:
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/917bb8ae5404879542d4c409091b1102637dc761.tar.gz") { } }:
 pkgs.mkShell {
   hardeningDisable = [ "fortify" ]; # needed for dlv to work (https://github.com/NixOS/nixpkgs/issues/18995)
   # packages = [
