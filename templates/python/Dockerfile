@@ -1,11 +1,11 @@
 ARG WATCHDOG_IMAGE_REPO=ghcr.io/openfaas/of-watchdog
-ARG OF_WATCHDOG_VERSION=0.9.15
+ARG WATCHDOG_IMAGE_TAG=0.9.15
 ARG PYTHON_IMAGE_REPO=python
-ARG PYTHON_IMAGE_VERSION=3.11-slim-bullseye
+ARG PYTHON_IMAGE_TAG=3.11-slim-bullseye
 
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${OF_WATCHDOG_VERSION} as watchdog
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${PYTHON_IMAGE_REPO}:${PYTHON_IMAGE_VERSION} as build
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} as watchdog
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${PYTHON_IMAGE_REPO}:${PYTHON_IMAGE_TAG} as build
 
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
