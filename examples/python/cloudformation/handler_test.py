@@ -41,7 +41,12 @@ class TestCloudFormation(unittest.TestCase):
             'aws_region': AWS_REGION,
             'action': 'deploy',
             'template': template,
-            'bucket_name': stack_name,
+            'template_inputs': [
+                    {
+                        'ParameterKey': 'BucketName',
+                        'ParameterValue': stack_name,
+                    }
+                ]
         }
 
         # create

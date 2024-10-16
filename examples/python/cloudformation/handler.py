@@ -41,9 +41,9 @@ class CloudFormationHandler:
         if not self.template:
             raise sdk.FailedException("template is required")
 
-        self.bucket_name = request.get('bucket_name')
-        if not self.bucket_name:
-            raise sdk.FailedException("bucket_name is required")
+        self.template_inputs = request.get('template_inputs')
+        if not self.template_inputs:
+            raise sdk.FailedException("template_inputs is required")
 
         # create aws session
         self.session = boto3.Session(
@@ -94,12 +94,7 @@ class CloudFormationHandler:
             response = self.client.create_stack(
                 StackName=self.stack_name,
                 TemplateBody=self.template,
-                Parameters=[
-                    {
-                        'ParameterKey': 'BucketName',
-                        'ParameterValue': self.bucket_name,
-                    }
-                ],
+                Parameters=self.template_inputs,
             )
         except self.client.exceptions.ClientError as e:
             raise sdk.FailedException(f"Error occurred while creating stack {e}")
@@ -114,12 +109,7 @@ class CloudFormationHandler:
             response = self.client.update_stack(
                 StackName=self.stack_name,
                 TemplateBody=self.template,
-                Parameters=[
-                    {
-                        'ParameterKey': 'BucketName',
-                        'ParameterValue': self.bucket_name,
-                    }
-                ],
+                Parameters=self.template_inputs,
             )
         except self.client.exceptions.ClientError as e:
             if e.response['Error']['Code'] == 'ValidationError' and 'No updates are to be performed' in e.response['Error']['Message']:

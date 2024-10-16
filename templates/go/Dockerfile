@@ -2,7 +2,7 @@ ARG WATCHDOG_IMAGE_REPO=ghcr.io/openfaas/of-watchdog
 ARG WATCHDOG_IMAGE_TAG=0.10.6
 ARG GO_IMAGE_REPO=golang
 ARG GO_IMAGE_TAG=1.22-alpine
-ARG FINAL_BASE_IMAGE=alpine:3.18
+ARG FINAL_BASE_IMAGE=alpine:3.20
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} as watchdog
 FROM --platform=${BUILDPLATFORM:-linux/amd64} ${GO_IMAGE_REPO}:${GO_IMAGE_TAG} as build
