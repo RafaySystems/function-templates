@@ -2,6 +2,7 @@ package function
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 )
@@ -32,8 +33,10 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 			})
 		case "transient":
 			return nil, sdk.NewErrTransient(errString)
-		default:
+		case "failed":
 			return nil, sdk.NewErrFailed(errString)
+		default:
+			return nil, fmt.Errorf("unknown error: %s", errString)
 		}
 	}
 

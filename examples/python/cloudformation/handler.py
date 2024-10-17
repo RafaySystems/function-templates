@@ -87,7 +87,7 @@ class CloudFormationHandler:
             return self.create()
 
     def create(self) -> Dict[str, Any]:
-        self.logger.info("create stack")
+        self.logger.info("creating stack")
 
         # deploy the stack
         try:
@@ -99,6 +99,7 @@ class CloudFormationHandler:
         except self.client.exceptions.ClientError as e:
             raise sdk.FailedException(f"Error occurred while creating stack {e}")
 
+        self.logger.info("created stack")
         raise sdk.ExecuteAgainException("Stack creation in progress", StackId=response.get('StackId'))
 
     def update(self) -> Dict[str, Any]:
@@ -117,6 +118,7 @@ class CloudFormationHandler:
             else:
                 raise sdk.FailedException(f"Error occurred while updating stack {e}")
 
+        self.logger.info("updated stack")
         raise sdk.ExecuteAgainException("Stack update in progress", StackId=response.get('StackId'))
 
     def destroy(self) -> Dict[str, Any]:
@@ -129,6 +131,8 @@ class CloudFormationHandler:
         response = self.client.delete_stack(
             StackName=self.stack_name
         )
+
+        self.logger.info("destroyed stack")
         return response
 
     def deploy_status(self, stack_id) -> Dict[str, Any]:

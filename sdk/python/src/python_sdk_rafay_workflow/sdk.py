@@ -82,7 +82,7 @@ def handle(handler, logger=None) -> Tuple[Dict[str, Any], int]:
     except TransientException as e:
         resp, status_code = jsonify(e.__dict__), 500
     except Exception as e:
-        resp, status_code = jsonify(errorCode=ERROR_CODE_FAILED,message=str(e)), 500
+        resp, status_code = jsonify(error_code=ERROR_CODE_FAILED,message=str(e)), 500
     return resp, status_code
 
 def _get_app(handler):
