@@ -63,6 +63,9 @@ ENV cgi_headers="true"
 ENV mode="http"
 ENV upstream_url="http://127.0.0.1:5000"
 ENV ready_path="/_/ready"
+ENV exec_timeout="3600"
+ENV read_timeout="300"
+ENV write_timeout="300"
 
 HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
 
