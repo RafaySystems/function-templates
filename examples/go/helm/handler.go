@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 	"helm.sh/helm/v3/pkg/action"
@@ -167,6 +168,7 @@ func deploy(logger sdk.Logger, cfg *Config) (sdk.Response, error) {
 func destroy(logger sdk.Logger, cfg *Config) (sdk.Response, error) {
 	logger.Info("destroying application")
 	uninstallClient := action.NewUninstall(cfg.actionConfig)
+	uninstallClient.Timeout = time.Minute * 5
 
 	rel, err := uninstallClient.Run(cfg.Release)
 	if err != nil {
@@ -187,6 +189,7 @@ func install(logger sdk.Logger, cfg *Config, cp string) (*release.Release, error
 	installClient.ReleaseName = cfg.Release
 	installClient.RepoURL = cfg.RepoURL
 	installClient.Version = cfg.ChartVersion
+	installClient.Timeout = time.Minute * 5
 
 	chartPath := cp
 	chartRequested, err := loader.Load(chartPath)
@@ -208,6 +211,7 @@ func upgrade(logger sdk.Logger, cfg *Config, cp string) (*release.Release, error
 	logger.Info("Release exists. Upgrading...\n", "release", cfg.Release)
 	upgradeClient := action.NewUpgrade(cfg.actionConfig)
 	upgradeClient.Namespace = cfg.settings.Namespace()
+	upgradeClient.Timeout = time.Minute * 5
 
 	chartPath := cp
 	chartRequested, err := loader.Load(chartPath)
