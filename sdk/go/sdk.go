@@ -263,9 +263,6 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 			AddSource: true,
 			Level:     fsdk.logLevel,
 		}))
-		logger = logger.With("activityID", activityID).
-			With("environmentID", environmentID).
-			With("environmentName", environmentName)
 		logger.Info("invoking function")
 
 		currLogger.Info("invoking function")
