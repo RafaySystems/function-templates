@@ -2,6 +2,8 @@ module handler/function
 
 go 1.22.0
 
+toolchain go1.22
+
 require github.com/RafaySystems/function-templates/sdk/go v0.0.0-20241018104407-b9b1cdf56078
 
 require (

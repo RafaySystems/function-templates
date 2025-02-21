@@ -7,7 +7,7 @@ ARG FINAL_BASE_IMAGE=alpine:3.20
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} as watchdog
 FROM --platform=${BUILDPLATFORM:-linux/amd64} ${GO_IMAGE_REPO}:${GO_IMAGE_TAG} as build
 
-RUN go install -v github.com/incu6us/goimports-reviser/v3@latest
+RUN go install -v github.com/incu6us/goimports-reviser/v3@v3.8.2
 RUN go install golang.org/x/tools/cmd/goimports@latest
 
 ARG TARGETPLATFORM
