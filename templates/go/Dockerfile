@@ -1,14 +1,14 @@
 ARG WATCHDOG_IMAGE_REPO=ghcr.io/openfaas/of-watchdog
 ARG WATCHDOG_IMAGE_TAG=0.10.6
 ARG GO_IMAGE_REPO=golang
-ARG GO_IMAGE_TAG=1.22-alpine
-ARG FINAL_BASE_IMAGE=alpine:3.20
+ARG GO_IMAGE_TAG=1.23-alpine3.21
+ARG FINAL_BASE_IMAGE=alpine:3.21
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} as watchdog
-FROM --platform=${BUILDPLATFORM:-linux/amd64} ${GO_IMAGE_REPO}:${GO_IMAGE_TAG} as build
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} AS watchdog
+FROM --platform=${BUILDPLATFORM:-linux/amd64} ${GO_IMAGE_REPO}:${GO_IMAGE_TAG} AS build
 
 RUN go install -v github.com/incu6us/goimports-reviser/v3@v3.8.2
-RUN go install golang.org/x/tools/cmd/goimports@latest
+RUN go install golang.org/x/tools/cmd/goimports@6a5b66bef78dc7a1cf8593b276f35102ec0cb11c
 
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
@@ -44,7 +44,7 @@ RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
 
 
 ## Final image
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${FINAL_BASE_IMAGE} as ship
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${FINAL_BASE_IMAGE} AS ship
 
 # Add non root user and certs
 RUN apk --no-cache add ca-certificates \

@@ -1,6 +1,6 @@
 module handler/helm-function
 
-go 1.22.0
+go 1.23
 
 require (
 	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20240607075618-025a48e5ce1b

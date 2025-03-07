@@ -1,4 +1,4 @@
-{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/917bb8ae5404879542d4c409091b1102637dc761.tar.gz") { } }:
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/24.11.tar.gz") { } }:
 pkgs.mkShell {
   hardeningDisable = [ "fortify" ]; # needed for dlv to work (https://github.com/NixOS/nixpkgs/issues/18995)
   # packages = [
@@ -10,11 +10,13 @@ pkgs.mkShell {
   # ];
   buildInputs = with pkgs; [
     # go
-    go_1_22
+    go_1_23
     go-bindata
+    
     gotools
     goimports-reviser
 
+    git
     #python
     # python311
 

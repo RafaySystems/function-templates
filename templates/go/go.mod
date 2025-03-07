@@ -1,8 +1,6 @@
 module go-function-handler
 
-go 1.22
-
-toolchain go1.22
+go 1.23
 
 require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088

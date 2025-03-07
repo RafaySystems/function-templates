@@ -1,6 +1,6 @@
 module github.com/RafaySystems/function-templates/builder
 
-go 1.22.0
+go 1.23
 
 require (
 	github.com/mholt/archiver/v4 v4.0.0-alpha.8
