@@ -26,3 +26,5 @@ __debug*
 __pycache__
 dist/
 .venv
+
+vendor/

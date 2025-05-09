@@ -11,7 +11,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mholt/archiver/v4"
+	"github.com/mholt/archives"
 	"github.com/otiai10/copy"
 )
 
@@ -130,14 +130,14 @@ func (b *buildContextGetter) GetBuildContext(ctx context.Context, options BuildC
 		return err
 	}
 
-	files, err := archiver.FilesFromDisk(&archiver.FromDiskOptions{}, tarFiles)
+	files, err := archives.FilesFromDisk(ctx, &archives.FromDiskOptions{}, tarFiles)
 	if err != nil {
 		return err
 	}
 
-	format := archiver.CompressedArchive{
-		Compression: archiver.Gz{},
-		Archival:    archiver.Tar{},
+	format := archives.CompressedArchive{
+		Compression: archives.Gz{},
+		Archival:    archives.Tar{},
 	}
 
 	err = format.Archive(ctx, writer, files)
