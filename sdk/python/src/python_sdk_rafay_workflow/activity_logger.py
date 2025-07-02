@@ -5,11 +5,11 @@ from io import BytesIO
 
 
 class ActivityLogHandler(MemoryHandler):
-    def __init__(self, endpoint, token, *args, **kwargs):
+    def __init__(self, endpoint, token, timeout, *args, **kwargs):
         MemoryHandler.__init__(self, *args, **kwargs)
         self.token = token
         self.endpoint = endpoint
-        self.timeout = kwargs.get('timeout', 5)
+        self.timeout = timeout
 
     def flush(self) -> None:
         self.acquire()
