@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from logging import Logger
 from python_sdk_rafay_workflow import sdk
+import time
 
 def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
     logger.info(f"received request, req: {request}")
@@ -14,6 +15,10 @@ def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
         "output": "Hello World",
         "request": request,
     }
+
+    for i in range(request.get("count", 1)):
+        logger.info(f"log iteration {i}")
+        time.sleep(request.get("sleep", 1))
 
     if "error" in request:
         err_str = str(request["error"])
