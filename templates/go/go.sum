@@ -1,7 +1,7 @@
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx65AqqDVpFEx+Rl6FJ1Oy/nX+BH/THvTLXn95CM=
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
-github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250702001023-c9388fa321ad h1:0ZoO1iAqNH0dOhv+WURE47HE2GUq6lKeS7IHoopdndY=
-github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250702001023-c9388fa321ad/go.mod h1:liqNQMYlst9b6r+qrJDzP3giH5cri0ZQySpKzkb27E0=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250702002652-9535c72d1476 h1:wvxBKVUtzzTHpYLXoN9IxpjXPPU1XPFwI0WvlC0K0Nk=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250702002652-9535c72d1476/go.mod h1:liqNQMYlst9b6r+qrJDzP3giH5cri0ZQySpKzkb27E0=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
