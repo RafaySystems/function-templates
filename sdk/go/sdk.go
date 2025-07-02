@@ -17,6 +17,7 @@ import (
 	"time"
 
 	httputil "github.com/RafaySystems/envmgr-pkgs/http"
+	slogmulti "github.com/samber/slog-multi"
 )
 
 var (
@@ -259,10 +260,10 @@ func (fsdk *FunctionSDK) getFunctionHandler() http.HandlerFunc {
 		logWriter := NewActivityLogWriter(r.Context(), currLogger, url, r.Header.Get(WorkflowTokenHeader), WithLogReqTimeout(fsdk.logWriteTimeout), WithWriteFlushTickRate(fsdk.logFlushRate), WithSkipTLSVerify(fsdk.skipTLSVerify))
 		defer logWriter.Close()
 
-		logger := slog.New(slog.NewTextHandler(logWriter, &slog.HandlerOptions{
+		logger := slog.New(slogmulti.Fanout(slog.NewTextHandler(logWriter, &slog.HandlerOptions{
 			AddSource: true,
 			Level:     fsdk.logLevel,
-		}))
+		}), currLogger.Handler()))
 		logger.Info("invoking function")
 
 		currLogger.Info("invoking function")
