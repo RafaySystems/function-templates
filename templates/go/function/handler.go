@@ -3,6 +3,7 @@ package function
 import (
 	"context"
 	"fmt"
+	"time"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 )
@@ -19,6 +20,16 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 	resp := make(sdk.Response)
 	resp["output"] = "Hello World"
 	resp["request"] = req
+
+	count, err := req.GetInt("count")
+	if err != nil {
+		return nil, sdk.NewErrFailed("count is not an integer")
+	}
+
+	for i := 0; i < count; i++ {
+		logger.Info("log iteration", "number", i)
+		time.Sleep(1 * time.Second)
+	}
 
 	if err, ok := req["error"]; ok {
 		errString, _ := err.(string)

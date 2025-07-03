@@ -68,7 +68,8 @@ ENV upstream_url="http://127.0.0.1:8082"
 ENV prefix_logs="false"
 ENV ready_path="/_/ready"
 ENV exec_timeout="0"
-ENV read_timeout="300"
-ENV write_timeout="300"
+ENV read_timeout="3600"
+ENV write_timeout="3600"
+ENV healthcheck_interval="30"
 
 CMD ["./fwatchdog"]
