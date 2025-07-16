@@ -5,11 +5,12 @@ from io import BytesIO
 
 
 class ActivityLogHandler(MemoryHandler):
-    def __init__(self, endpoint, token, timeout, *args, **kwargs):
+    def __init__(self, endpoint, token, timeout, verify, *args, **kwargs):
         MemoryHandler.__init__(self, *args, **kwargs)
         self.token = token
         self.endpoint = endpoint
         self.timeout = timeout
+        self.verify = verify
 
     def flush(self) -> None:
         self.acquire()
@@ -23,7 +24,7 @@ class ActivityLogHandler(MemoryHandler):
                 }
                 resp = requests.post(f'{self.endpoint}?append=true', headers={
                     WorkflowTokenHeader: self.token,
-                }, files=files, timeout=self.timeout)
+                }, files=files, timeout=self.timeout, verify=self.verify)
 
                 if resp.status_code != 200:
                     print(f"Failed to send logs to {self.endpoint}, status code: {resp.status_code}, response: {resp.text}")

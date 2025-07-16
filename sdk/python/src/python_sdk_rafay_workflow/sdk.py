@@ -15,6 +15,7 @@ LOG_LEVEL=os.environ.get('LOG_LEVEL', 'INFO')
 LOG_BUFFER_CAPACITY=int(os.environ.get('LOG_BUFFER_CAPACITY', "10"))
 WSGI_THREADS=int(os.environ.get('WSGI_THREADS', "40"))
 LOG_FLUSH_TIMEOUT=int(os.environ.get('LOG_FLUSH_TIMEOUT', "10"))
+SKIP_TLS_VERIFY=os.environ.get('skip_tls_verify', "false")
 
 _format = "time=%(asctime)s level=%(levelname)s path=%(pathname)s line=%(lineno)d msg=%(message)s"
 _logger = logging.Logger(FUNCTION_NAME)
@@ -42,7 +43,7 @@ def log(f):
         token = request.headers.get(WorkflowTokenHeader)
 
         endpoint = engine_endpoint + file_upload_path
-        logging_handler = ActivityLogHandler(endpoint=endpoint, token=token, capacity=LOG_BUFFER_CAPACITY, timeout=LOG_FLUSH_TIMEOUT)
+        logging_handler = ActivityLogHandler(endpoint=endpoint, token=token, capacity=LOG_BUFFER_CAPACITY, timeout=LOG_FLUSH_TIMEOUT, verify=(SKIP_TLS_VERIFY != "true"))
         logging_handler.setFormatter(logging.Formatter(_format))
         logger.setLevel(LOG_LEVEL)
         logger.addHandler(logging_handler)
