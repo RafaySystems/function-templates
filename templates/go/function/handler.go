@@ -2,10 +2,12 @@ package function
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
+	stateclient "github.com/RafaySystems/function-templates/sdk/go/pkg/state"
 )
 
 func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Response, error) {
@@ -20,6 +22,28 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 	resp := make(sdk.Response)
 	resp["output"] = "Hello World"
 	resp["request"] = req
+
+	// Set the state with the incremented counter
+	state := stateclient.NewBoundState(req).WithEnvScope()
+
+	// Increment counter safely and set it to store
+	err := state.Set(ctx, "counter", func(old json.RawMessage) (json.RawMessage, error) {
+		var oldValue float64
+		if err := json.Unmarshal(old, &oldValue); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal old value: %w", err)
+		}
+		newValue := oldValue + 1
+		if new, err := json.Marshal(newValue); err != nil {
+			return nil, fmt.Errorf("failed to marshal new value: %w", err)
+		} else {
+			resp["counter"] = newValue
+			logger.Info("incremented counter", "new_value", newValue)
+			return new, nil
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	count, err := req.GetInt("count")
 	if err != nil {

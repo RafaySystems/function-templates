@@ -309,6 +309,10 @@ func (fsdk *FunctionSDK) makeRequestHandler(logger *slog.Logger) http.HandlerFun
 			"activityID":      r.Header.Get(ActivityIDHeader),
 			"environmentID":   r.Header.Get(EnvironmentIDHeader),
 			"environmentName": r.Header.Get(EnvironmentNameHeader),
+			"organizationID":  r.Header.Get(OrganizationIDHeader),
+			"projectID":       r.Header.Get(ProjectIDHeader),
+			"stateStoreUrl":   r.Header.Get(EaasStateEndpointHeader),
+			"stateStoreToken": r.Header.Get(EaasStateAPITokenHeader),
 		}
 
 		result, err := fsdk.invokeHandler(r.Context(), logger, req)

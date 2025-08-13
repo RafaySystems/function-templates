@@ -11,6 +11,7 @@ const (
 	ErrCodeExecuteAgain
 	ErrCodeFailed
 	ErrCodeTransient
+	ErrCodeNotFound
 )
 
 type errorCode int
@@ -85,6 +86,23 @@ func (e *errTransient) Unwrap() error {
 	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeTransient}
 }
 
+type errNotFound struct {
+	Message string
+}
+
+func (e *errNotFound) Error() string {
+	return e.Message
+}
+
+func (e *errNotFound) Is(err error) bool {
+	_, ok := err.(*errNotFound)
+	return ok
+}
+
+func (e *errNotFound) Unwrap() error {
+	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeNotFound}
+}
+
 func IsErrExecuteAgain(err error) bool {
 	return errors.Is(err, &errExecuteAgain{})
 }
@@ -99,6 +117,10 @@ func IsErrTransient(err error) bool {
 
 func IsErrFunction(err error) bool {
 	return errors.Is(err, &ErrFunction{})
+}
+
+func IsErrNotFound(err error) bool {
+	return errors.Is(err, &errNotFound{})
 }
 
 func AsErrFunction(err error) (*ErrFunction, bool) {
@@ -145,4 +167,8 @@ func newErrFailedWithStackTrace(msg string) error {
 
 func NewErrTransient(msg string) error {
 	return &errTransient{Message: msg}
+}
+
+func NewErrNotFound(msg string) error {
+	return &errNotFound{Message: msg}
 }
