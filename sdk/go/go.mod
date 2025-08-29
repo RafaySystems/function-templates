@@ -8,6 +8,7 @@ require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
+	github.com/pkg/errors v0.9.1
 	github.com/samber/slog-multi v1.4.1
 	github.com/spf13/cast v1.6.0
 	golang.org/x/sync v0.15.0

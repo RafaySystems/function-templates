@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from logging import Logger
-from python_sdk_rafay_workflow import sdk
+from python_sdk_rafay_workflow import sdk, StateClient
 import time
 
 def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
@@ -10,6 +10,21 @@ def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
     if "previous" in request:
         logger.info(f"previous counter, prev: {request['previous']}")
         counter = request["previous"].get("counter", 0)
+
+    # Build state client for environment scope
+    state = StateClient.for_env(
+        base_url=request["metadata"]["stateStoreURL"],
+        token=request["metadata"]["stateStoreToken"],
+        org_id=request["metadata"]["organizationID"],
+        project_id=request["metadata"]["projectID"],
+        env_id=request["metadata"]["environmentID"]
+    )
+
+    # Increment counter with OCC safe update
+    state.Set("counter", lambda old: (old or 0) + 1)
+
+    value = state.Get("counter")
+    logger.info(f"counter updated: {value}")
 
     resp = {
         "output": "Hello World",

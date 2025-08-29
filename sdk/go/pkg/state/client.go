@@ -39,7 +39,7 @@ type boundStateBuilder struct {
 func NewBoundState(req sdk.Request) StateScopeBuilder {
 	return &boundStateBuilder{
 		httpClient: httputil.NewRetriableHTTPClient().StandardClient(),
-		baseURL:    req.MetaString("stateStoreURL"),
+		baseURL:    req.MetaString("stateStoreUrl"),
 		token:      req.MetaString("stateStoreToken"),
 		orgID:      req.MetaString("organizationID"),
 		projectID:  req.MetaString("projectID"),
@@ -188,7 +188,7 @@ func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, s
 		q.Set("environment_id", *b.scope.EnvironmentID)
 	}
 
-	fullURL := fmt.Sprintf("%s/state?%s", b.baseURL, q.Encode())
+	fullURL := fmt.Sprintf("%s?%s", b.baseURL, q.Encode())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
 	if err != nil {
 		return nil, "", err
@@ -218,18 +218,14 @@ func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, s
 }
 
 func (b *boundState) Delete(ctx context.Context, key string) error {
-	q := url.Values{}
-	q.Set("org_id", b.scope.OrgID)
-	q.Set("key", key)
-	if b.scope.ProjectID != nil {
-		q.Set("project_id", *b.scope.ProjectID)
-	}
-	if b.scope.EnvironmentID != nil {
-		q.Set("environment_id", *b.scope.EnvironmentID)
-	}
 
-	fullURL := fmt.Sprintf("%s/state?%s", b.baseURL, q.Encode())
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, fullURL, nil)
+	body := map[string]any{
+		"scope": b.scope,
+		"key":   key,
+	}
+	buf, _ := json.Marshal(body)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, b.baseURL, bytes.NewReader(buf))
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}

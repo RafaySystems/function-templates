@@ -76,9 +76,13 @@ def handle(handler, logger=None) -> Tuple[Dict[str, Any], int]:
         if req is None:
             req = {}
         req["metadata"] = {
-            "activityID": request.headers.get(ActivityIDHeader),
-            "environmentID": request.headers.get(EnvironmentIDHeader),
-            "environmentName": request.headers.get(EnvironmentNameHeader),
+            "activityID":       request.headers.get(ActivityIDHeader),
+            "environmentID":    request.headers.get(EnvironmentIDHeader),
+            "environmentName":  request.headers.get(EnvironmentNameHeader),
+            "organizationID":   request.headers.get(OrganizationIDHeader),
+			"projectID":        request.headers.get(ProjectIDHeader),
+			"stateStoreUrl":    request.headers.get(EaasStateEndpointHeader),
+			"stateStoreToken":  request.headers.get(EaasStateAPITokenHeader),
         }
         resp = handler(logger, req)
         resp, status_code = jsonify({"data": resp}), 200
