@@ -1,18 +1,17 @@
-from typing import *
 import pytest_httpserver as httpserver
-import unittest
-import requests
-from logging import Logger
-from python_sdk_rafay_workflow import sdk
-from python_sdk_rafay_workflow import const as sdk_const
-from .jira import handle, approve_issue
-import backoff
-
-# from waitress import serve
+from fastapi.testclient import TestClient
 import socket
+import unittest
 from contextlib import closing
-# import threading
-# import multiprocessing
+
+import backoff
+import pytest_httpserver as httpserver
+from fastapi.testclient import TestClient
+from python_sdk_rafay_workflow import const as sdk_const
+from python_sdk_rafay_workflow import sdk
+
+from .jira import handle, approve_issue
+
 
 def find_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
@@ -26,12 +25,9 @@ class TestSDK(unittest.TestCase):
         super(TestSDK, self).__init__(*args, **kwargs)
         self.activity_api = httpserver.HTTPServer()
         app = sdk._get_app(handle)
-        port = find_free_port()
-        app.testing = True
-        self.client = app.test_client()
+        self.client = TestClient(app)
         self.function_url = "/"
         self.data = {}
-        # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
         
         
     def setUp(self) -> None:
@@ -45,15 +41,16 @@ class TestSDK(unittest.TestCase):
     def test_jira(self):
         self.activity_api.expect_request("/jira-func").respond_with_data("")
         resp = self.call_function()
-        self.assertEqual(resp.json, {"data":{"status": "Approved"}})
+        self.assertEqual(resp.json(), {"data":{"status": "Approved"}})
 
     @staticmethod
     def _retry(resp):
         if resp.status_code == 500:
             # approve after 2 retries
-            if 'data' in resp.json and resp.json['data'].get('counter', 0) == 2:
-                approve_issue(resp.json['data'].get('ticket_id'))
-            return resp.json["error_code"] != sdk.ERROR_CODE_FAILED
+            resp_json = resp.json()
+            if 'data' in resp_json and resp_json['data'].get('counter', 0) == 2:
+                approve_issue(resp_json['data'].get('ticket_id'))
+            return resp_json["error_code"] != sdk.ERROR_CODE_FAILED
 
     @backoff.on_predicate(backoff.expo, _retry, max_tries=5)
     def call_function(self):
@@ -64,7 +61,7 @@ class TestSDK(unittest.TestCase):
             sdk_const.ActivityIDHeader: "activityID",
             sdk_const.EnvironmentIDHeader: "environmentID",
             })
-        self.data["previous"] = resp.json.get("data", {})
+        self.data["previous"] = resp.json().get("data", {})
         return resp
     
 if __name__ == "__main__":

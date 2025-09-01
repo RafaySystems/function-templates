@@ -1,4 +1,4 @@
-flask
-waitress
+fastapi
+uvicorn[standard]
 tox==3.*
 rafay-workflow-sdk>=0.0.29
