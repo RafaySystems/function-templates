@@ -1,3 +1,5 @@
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250829133112-fb0b932282b6 h1:VCHqu5AV1asfxgF5aLPciyZD4WufdzWP/zFS/YLPrf8=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250829133112-fb0b932282b6/go.mod h1:ikBhVh8tjEXAxjManc6vs4AOx4gvwJdqkPstYRS07s0=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=

@@ -12,6 +12,7 @@ const (
 	ErrCodeFailed
 	ErrCodeTransient
 	ErrCodeNotFound
+	ErrCodeConflict
 )
 
 type errorCode int
@@ -171,4 +172,29 @@ func NewErrTransient(msg string) error {
 
 func NewErrNotFound(msg string) error {
 	return &errNotFound{Message: msg}
+}
+
+type errConflict struct {
+	Message string
+}
+
+func (e *errConflict) Error() string {
+	return e.Message
+}
+
+func (e *errConflict) Is(err error) bool {
+	_, ok := err.(*errConflict)
+	return ok
+}
+
+func (e *errConflict) Unwrap() error {
+	return &ErrFunction{Message: e.Message, ErrCode: ErrCodeConflict}
+}
+
+func IsErrConflict(err error) bool {
+	return errors.Is(err, &errConflict{})
+}
+
+func NewErrConflict(msg string) error {
+	return &errConflict{Message: msg}
 }

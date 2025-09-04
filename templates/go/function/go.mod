@@ -2,7 +2,7 @@ module handler/function
 
 go 1.23.0
 
-require github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250813183117-e957d4d5fe47
+require github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250829133112-fb0b932282b6
 
 require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 // indirect

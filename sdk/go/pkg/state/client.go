@@ -81,6 +81,7 @@ func (b *boundStateBuilder) WithCustomScope(scope StateScope) ScopedState {
 type ScopedState interface {
 	Get(ctx context.Context, key string) (json.RawMessage, error)
 	Set(ctx context.Context, key string, updateFn func(old json.RawMessage) (json.RawMessage, error)) error
+	SetKV(ctx context.Context, key string, value json.RawMessage) error
 	Delete(ctx context.Context, key string) error
 }
 
@@ -96,7 +97,7 @@ type boundState struct {
 
 type stateResponse struct {
 	Value   json.RawMessage `json:"value"`
-	Version string          `json:"version"`
+	Version uint32          `json:"version"`
 }
 
 func (b *boundState) injectHeaders(req *http.Request) {
@@ -114,6 +115,47 @@ func (b *boundState) Get(ctx context.Context, key string) (json.RawMessage, erro
 		return zero, errors.Wrap(err, "failed to get value")
 	}
 	return value, nil
+}
+
+// Developer passes key and value to set
+func (b *boundState) SetKV(ctx context.Context, key string, value json.RawMessage) error {
+	// Step 1: Get latest raw value and version
+	_, version, err := b.getRaw(ctx, key)
+	if err != nil && !sdk.IsErrNotFound(err) {
+		return err
+	}
+
+	// Step 2: Send update with version for OCC
+	body := map[string]any{
+		"scope":   b.scope,
+		"key":     key,
+		"value":   value,
+		"version": version,
+	}
+	buf, _ := json.Marshal(body)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, b.baseURL, bytes.NewReader(buf))
+	if err != nil {
+		return err
+	}
+	b.injectHeaders(req)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusConflict {
+		return sdk.NewErrConflict("version conflict on set")
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return sdk.NewErrFailed(fmt.Sprintf("set failed: %s", string(body)))
+	}
+
+	// Success
+	return nil
 }
 
 // Set abstracts create/update with OCC retry logic
@@ -166,18 +208,18 @@ func (b *boundState) Set(ctx context.Context, key string, updateFn func(old json
 		}
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
-			return fmt.Errorf("set failed: %s", string(body))
+			return sdk.NewErrFailed(fmt.Sprintf("set failed: %s", string(body)))
 		}
 
 		// Success
 		return nil
 	}
 
-	return fmt.Errorf("set failed after max retries due to version conflicts")
+	return sdk.NewErrTransient("set failed after max retries due to version conflicts")
 }
 
 // Helper for internal GetRaw
-func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, string, error) {
+func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, uint32, error) {
 	q := url.Values{}
 	q.Set("org_id", b.scope.OrgID)
 	q.Set("key", key)
@@ -191,27 +233,27 @@ func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, s
 	fullURL := fmt.Sprintf("%s?%s", b.baseURL, q.Encode())
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 	b.injectHeaders(req)
 
 	resp, err := b.httpClient.Do(req)
 	if err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, "", sdk.NewErrNotFound("key not found in state store")
+		return nil, 0, sdk.NewErrNotFound("key not found in state store")
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, "", fmt.Errorf("get failed: %s", string(body))
+		return nil, 0, sdk.NewErrNotFound(fmt.Sprintf("get kv state failed: %s", string(body)))
 	}
 
 	var result stateResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, "", err
+		return nil, 0, err
 	}
 
 	return result.Value, result.Version, nil
@@ -240,7 +282,7 @@ func (b *boundState) Delete(ctx context.Context, key string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("delete failed: %s", string(body))
+		return sdk.NewErrFailed(fmt.Sprintf("delete failed: %s", string(body)))
 	}
 
 	return nil
