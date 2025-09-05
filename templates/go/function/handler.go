@@ -23,6 +23,42 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 	resp["output"] = "Hello World"
 	resp["request"] = req
 
+	count, err := req.GetInt("count")
+	if err != nil {
+		return nil, sdk.NewErrFailed("count is not an integer")
+	}
+
+	for i := 0; i < count; i++ {
+		logger.Info("log iteration", "number", i)
+		time.Sleep(1 * time.Second)
+	}
+
+	if err, ok := req["error"]; ok {
+		errString, _ := err.(string)
+		switch errString {
+		case "execute_again":
+			if counter > 1 {
+				break
+			}
+			return nil, sdk.NewErrExecuteAgain(errString, map[string]any{
+				"rkey":    "rvalue",
+				"counter": counter + 1,
+			})
+		case "transient":
+			return nil, sdk.NewErrTransient(errString)
+		case "failed":
+			return nil, sdk.NewErrFailed(errString)
+		default:
+			return nil, fmt.Errorf("unknown error: %s", errString)
+		}
+	}
+
+	// if no state store info, return early
+	metadata, ok := req["metadata"].(map[string]any)
+	if !ok || metadata["stateStoreUrl"] == "" {
+		return sdk.Response(resp), nil
+	}
+
 	// save state store at organization scope
 	ostate := stateclient.NewBoundState(req).WithOrgScope()
 
@@ -51,7 +87,7 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 
 	// save state store at project scope
 	pstate := stateclient.NewBoundState(req).WithProjectScope()
-	raw, version, err := pstate.Get(ctx, "project_payload")
+	raw, version, err = pstate.Get(ctx, "project_payload")
 	if sdk.IsErrNotFound(err) {
 		err = pstate.SetKV(ctx, "project_payload", json.RawMessage(`{"counter": 1}`), version)
 		if err != nil {
@@ -94,36 +130,6 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	count, err := req.GetInt("count")
-	if err != nil {
-		return nil, sdk.NewErrFailed("count is not an integer")
-	}
-
-	for i := 0; i < count; i++ {
-		logger.Info("log iteration", "number", i)
-		time.Sleep(1 * time.Second)
-	}
-
-	if err, ok := req["error"]; ok {
-		errString, _ := err.(string)
-		switch errString {
-		case "execute_again":
-			if counter > 1 {
-				break
-			}
-			return nil, sdk.NewErrExecuteAgain(errString, map[string]any{
-				"rkey":    "rvalue",
-				"counter": counter + 1,
-			})
-		case "transient":
-			return nil, sdk.NewErrTransient(errString)
-		case "failed":
-			return nil, sdk.NewErrFailed(errString)
-		default:
-			return nil, fmt.Errorf("unknown error: %s", errString)
-		}
 	}
 
 	return sdk.Response(resp), nil

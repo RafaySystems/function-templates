@@ -6,7 +6,7 @@ toolchain go1.23.3
 
 require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088
-	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250904191557-6072e79f3fa5
+	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20250905105634-53d75a84cf61
 )
 
 require (
