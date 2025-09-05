@@ -23,15 +23,52 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 	resp["output"] = "Hello World"
 	resp["request"] = req
 
+	// save state store at organization scope
+	ostate := stateclient.NewBoundState(req).WithOrgScope()
+
+	raw, version, err := ostate.Get(ctx, "response")
+	if sdk.IsErrNotFound(err) {
+		version = 1
+	} else {
+		version = version + 1
+		oldResp := make(sdk.Response)
+		if err := json.Unmarshal(raw, &oldResp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal old response: %w", err)
+		}
+		oldResp["output"] = "Hello Universe"
+		resp = oldResp
+		logger.Info("loaded previous response from state store", "response", resp)
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal response: %w", err)
+	}
+	err = ostate.SetKV(ctx, "response", json.RawMessage(respBytes), version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set initial response in state: %w", err)
+	}
+
+	// save state store at project scope
+	pstate := stateclient.NewBoundState(req).WithProjectScope()
+	raw, version, err := pstate.Get(ctx, "project_payload")
+	if sdk.IsErrNotFound(err) {
+		err = pstate.SetKV(ctx, "project_payload", json.RawMessage(`{"counter": 1}`), version)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set initial payload: %w", err)
+		}
+	} else {
+		var payload map[string]any
+		if err := json.Unmarshal(raw, &payload); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal payload: %w", err)
+		}
+		if payload["counter"].(float64) == 1.0 {
+			pstate.Delete(ctx, "project_payload")
+		}
+	}
+
 	// Set the state with the incremented counter
 	state := stateclient.NewBoundState(req).WithEnvScope()
-
-	//Increment counter and set it to store
-	err := state.SetKV(ctx, "counter", json.RawMessage(fmt.Sprintf("%f", counter)))
-	if err != nil {
-		return nil, err
-	}
-	resp["counter"] = counter
 
 	// Set interim payload safely and set it to store
 	err = state.Set(ctx, "payload", func(old json.RawMessage) (json.RawMessage, error) {

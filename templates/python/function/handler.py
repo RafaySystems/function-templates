@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from logging import Logger
-from python_sdk_rafay_workflow import sdk, StateClient
+from python_sdk_rafay_workflow import sdk
+from python_sdk_rafay_workflow.state_client import StateClientBuilder
 import time
 
 def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
@@ -11,20 +12,33 @@ def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"previous counter, prev: {request['previous']}")
         counter = request["previous"].get("counter", 0)
 
+    # Build state client for organization scope
+    ostate = StateClientBuilder(request).with_org_scope()
+
+   # Increment counter with OCC safe update
+    ostate.Set("org_counter", lambda old: (old or 0) + 1)
+
+    # Build state client for project scope
+    pstate = StateClientBuilder(request).with_project_scope()
+
+    # Increment counter without OCC safe update
+    value, version = pstate.Get("project_counter")
+    logger.info(f"project counter read: {value}, version: {version}")
+    pstate.SetKV("project_counter", str(int(value or 0) + 1), version)
+
     # Build state client for environment scope
-    state = StateClient.for_env(
-        base_url=request["metadata"]["stateStoreURL"],
-        token=request["metadata"]["stateStoreToken"],
-        org_id=request["metadata"]["organizationID"],
-        project_id=request["metadata"]["projectID"],
-        env_id=request["metadata"]["environmentID"]
-    )
+    state = StateClientBuilder(request).with_env_scope()
 
     # Increment counter with OCC safe update
-    state.Set("counter", lambda old: (old or 0) + 1)
+    state.Set("env_counter", lambda old: (old or 0) + 1)
 
-    value = state.Get("counter")
-    logger.info(f"counter updated: {value}")
+    value, version = state.Get("env_counter")
+    logger.info(f"environment counter updated: {value}")
+
+    if version > 2:
+        # Simulate for testing delete
+        state.Delete("env_counter")
+        logger.info(f"environment counter deleted")
 
     resp = {
         "output": "Hello World",

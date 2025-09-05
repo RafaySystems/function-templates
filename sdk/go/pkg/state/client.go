@@ -15,9 +15,9 @@ import (
 )
 
 type StateScope struct {
-	OrgID         string  `json:"organization_id"`
-	ProjectID     *string `json:"project_id,omitempty"`
-	EnvironmentID *string `json:"environment_id,omitempty"`
+	OrganizationID string  `json:"organization_id"`
+	ProjectID      *string `json:"project_id,omitempty"`
+	EnvironmentID  *string `json:"environment_id,omitempty"`
 }
 
 type StateScopeBuilder interface {
@@ -28,71 +28,71 @@ type StateScopeBuilder interface {
 }
 
 type boundStateBuilder struct {
-	httpClient *http.Client
-	baseURL    string
-	token      string
-	orgID      string
-	projectID  string
-	envID      string
+	httpClient     *http.Client
+	baseURL        string
+	token          string
+	organizationID string
+	projectID      string
+	environmentID  string
 }
 
 func NewBoundState(req sdk.Request) StateScopeBuilder {
 	return &boundStateBuilder{
-		httpClient: httputil.NewRetriableHTTPClient().StandardClient(),
-		baseURL:    req.MetaString("stateStoreUrl"),
-		token:      req.MetaString("stateStoreToken"),
-		orgID:      req.MetaString("organizationID"),
-		projectID:  req.MetaString("projectID"),
-		envID:      req.MetaString("environmentID"),
+		httpClient:     httputil.NewRetriableHTTPClient().StandardClient(),
+		baseURL:        req.MetaString("stateStoreUrl"),
+		token:          req.MetaString("stateStoreToken"),
+		organizationID: req.MetaString("organizationID"),
+		projectID:      req.MetaString("projectID"),
+		environmentID:  req.MetaString("environmentID"),
 	}
 }
 
 func (b *boundStateBuilder) WithOrgScope() ScopedState {
-	return b.WithCustomScope(StateScope{OrgID: b.orgID})
+	return b.WithCustomScope(StateScope{OrganizationID: b.organizationID})
 }
 
 func (b *boundStateBuilder) WithProjectScope() ScopedState {
 	return b.WithCustomScope(StateScope{
-		OrgID:     b.orgID,
-		ProjectID: &b.projectID,
+		OrganizationID: b.organizationID,
+		ProjectID:      &b.projectID,
 	})
 }
 
 func (b *boundStateBuilder) WithEnvScope() ScopedState {
 	return b.WithCustomScope(StateScope{
-		OrgID:         b.orgID,
-		ProjectID:     &b.projectID,
-		EnvironmentID: &b.envID,
+		OrganizationID: b.organizationID,
+		ProjectID:      &b.projectID,
+		EnvironmentID:  &b.environmentID,
 	})
 }
 
 func (b *boundStateBuilder) WithCustomScope(scope StateScope) ScopedState {
 	return &boundState{
-		httpClient: b.httpClient,
-		baseURL:    b.baseURL,
-		token:      b.token,
-		orgID:      b.orgID,
-		projectID:  b.projectID,
-		envID:      b.envID,
-		scope:      scope,
+		httpClient:     b.httpClient,
+		baseURL:        b.baseURL,
+		token:          b.token,
+		organizationID: b.organizationID,
+		projectID:      b.projectID,
+		environmentID:  b.environmentID,
+		scope:          scope,
 	}
 }
 
 type ScopedState interface {
-	Get(ctx context.Context, key string) (json.RawMessage, error)
+	Get(ctx context.Context, key string) (json.RawMessage, uint32, error)
 	Set(ctx context.Context, key string, updateFn func(old json.RawMessage) (json.RawMessage, error)) error
-	SetKV(ctx context.Context, key string, value json.RawMessage) error
+	SetKV(ctx context.Context, key string, value json.RawMessage, version uint32) error
 	Delete(ctx context.Context, key string) error
 }
 
 type boundState struct {
-	httpClient *http.Client
-	baseURL    string
-	token      string
-	orgID      string
-	projectID  string
-	envID      string
-	scope      StateScope
+	httpClient     *http.Client
+	baseURL        string
+	token          string
+	organizationID string
+	projectID      string
+	environmentID  string
+	scope          StateScope
 }
 
 type stateResponse struct {
@@ -102,30 +102,25 @@ type stateResponse struct {
 
 func (b *boundState) injectHeaders(req *http.Request) {
 	req.Header.Set("X-Eaas-State-Token", b.token)
-	req.Header.Set("X-Organization-ID", b.orgID)
+	req.Header.Set("X-Organization-ID", b.organizationID)
 	req.Header.Set("X-Project-ID", b.projectID)
-	req.Header.Set("X-Environment-ID", b.envID)
+	req.Header.Set("X-Environment-ID", b.environmentID)
 	req.Header.Set("Content-Type", "application/json")
 }
 
-func (b *boundState) Get(ctx context.Context, key string) (json.RawMessage, error) {
+func (b *boundState) Get(ctx context.Context, key string) (json.RawMessage, uint32, error) {
 	var zero json.RawMessage
-	value, _, err := b.getRaw(ctx, key)
+	value, version, err := b.getRaw(ctx, key)
 	if err != nil {
-		return zero, errors.Wrap(err, "failed to get value")
+		return zero, 0, sdk.NewErrNotFound(fmt.Sprintf("key not found: %s", key))
 	}
-	return value, nil
+	return value, version, nil
 }
 
 // Developer passes key and value to set
-func (b *boundState) SetKV(ctx context.Context, key string, value json.RawMessage) error {
-	// Step 1: Get latest raw value and version
-	_, version, err := b.getRaw(ctx, key)
-	if err != nil && !sdk.IsErrNotFound(err) {
-		return err
-	}
+func (b *boundState) SetKV(ctx context.Context, key string, value json.RawMessage, version uint32) error {
 
-	// Step 2: Send update with version for OCC
+	// Send update with version for OCC
 	body := map[string]any{
 		"scope":   b.scope,
 		"key":     key,
@@ -221,7 +216,7 @@ func (b *boundState) Set(ctx context.Context, key string, updateFn func(old json
 // Helper for internal GetRaw
 func (b *boundState) getRaw(ctx context.Context, key string) (json.RawMessage, uint32, error) {
 	q := url.Values{}
-	q.Set("org_id", b.scope.OrgID)
+	q.Set("organization_id", b.scope.OrganizationID)
 	q.Set("key", key)
 	if b.scope.ProjectID != nil {
 		q.Set("project_id", *b.scope.ProjectID)
