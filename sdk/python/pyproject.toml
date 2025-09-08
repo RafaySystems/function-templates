@@ -7,7 +7,7 @@ packages = ["src/python_sdk_rafay_workflow"]
 
 [project]
 name = "rafay_workflow_sdk"
-version = "0.0.31rc2"
+version = "0.0.31rc3"
 authors = [
     { name = "Bheema Sarat Chandra Kaki", email = "sarat@rafay.co" },
     { name = "Avinash Varma", email = "avinash@rafay.co" },

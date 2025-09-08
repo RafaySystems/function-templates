@@ -7,7 +7,8 @@ import sys
 from typing import Dict, Any
 
 import uvicorn
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
 
 from .activity_logger import ActivityLogHandler
 from .const import *
@@ -88,7 +89,7 @@ async def run_handler(handler, logger, req):
         return await asyncio.to_thread(handler, logger, req)
 
 
-async def handle(handler, request: Request, logger=None) -> Dict[str, Any]:
+async def handle(handler, request: Request, logger=None) -> Dict[str, Any] | Response:
     try:
         body = await request.body()
         req = json.loads(body) if body else {}
@@ -100,13 +101,13 @@ async def handle(handler, request: Request, logger=None) -> Dict[str, Any]:
         resp = await run_handler(handler, logger, req)
         return {"data": resp}
     except ExecuteAgainException as e:
-        raise HTTPException(status_code=500, detail=e.__dict__)
+        return JSONResponse(e.__dict__, 500)
     except FailedException as e:
-        raise HTTPException(status_code=500, detail=e.__dict__)
+        return JSONResponse(e.__dict__, 500)
     except TransientException as e:
-        raise HTTPException(status_code=500, detail=e.__dict__)
+        return JSONResponse(e.__dict__, 500)
     except Exception as e:
-        raise HTTPException(status_code=500, detail={"error_code": ERROR_CODE_FAILED, "message": str(e)})
+        return JSONResponse(content={"error_code": ERROR_CODE_FAILED, "message": str(e)}, status_code=500)
 
 
 def _get_app(handler):
