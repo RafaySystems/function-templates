@@ -1,28 +1,24 @@
-from typing import *
-import pytest_httpserver as httpserver
-from werkzeug.wrappers import Response
-from requests_toolbelt.multipart import decoder
-import time
-import unittest
-import requests
-from logging import Logger
-from python_sdk_rafay_workflow import sdk
-from python_sdk_rafay_workflow import const as sdk_const
-
-from waitress import serve
 import socket
+import unittest
 from contextlib import closing
-import threading
-import multiprocessing
+from logging import Logger
+from typing import *
 
-def handle(logger: Logger,request: Dict[str, Any]) -> Dict[str, Any]:
+import pytest_httpserver as httpserver
+from fastapi.testclient import TestClient
+from python_sdk_rafay_workflow import const as sdk_const
+from python_sdk_rafay_workflow import sdk
+
+
+def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
     logger.info("inside function handler1, activityID: %s" % (request["metadata"]["activityID"]))
     logger.info("inside function handler2, activityID: %s" % (request["metadata"]["activityID"]))
     for key in range(10):
         logger.info("inside function handler %s, activityID: %s" % (key, request["metadata"]["activityID"]))
     return {
-       "message": "Hello, World!"
+        "message": "Hello, World!"
     }
+
 
 def find_free_port():
     with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
@@ -30,15 +26,14 @@ def find_free_port():
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return s.getsockname()[1]
 
+
 class TestSDK(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestSDK, self).__init__(*args, **kwargs)
         self.activity_api = httpserver.HTTPServer()
         app = sdk._get_app(handle)
-        port = find_free_port()
-        app.testing = True
-        self.client = app.test_client()
+        self.client = TestClient(app)
         self.function_url = "/"
         # self.function_server = multiprocessing.Process(target=serve, args=(app,), kwargs={"host": "127.0.0.1", "port": port})
 
@@ -58,8 +53,9 @@ class TestSDK(unittest.TestCase):
             sdk_const.WorkflowTokenHeader: "token",
             sdk_const.ActivityIDHeader: "activityID",
             sdk_const.EnvironmentIDHeader: "environmentID",
-            })
-        self.assertEqual(resp.json, {"data":{"message": "Hello, World!"}})
+        })
+        self.assertEqual(resp.json(), {"data": {"message": "Hello, World!"}})
+
 
 def my_custom_handler(request):
     if request.method == 'POST':
@@ -71,6 +67,7 @@ def my_custom_handler(request):
             return 415, {"Content-Type": "text/plain"}, "Unsupported Media Type"
     else:
         return 405, {"Content-Type": "text/plain"}, "Method Not Allowed"
+
 
 if __name__ == "__main__":
     unittest.main()
