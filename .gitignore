@@ -28,3 +28,7 @@ dist/
 .venv
 
 vendor/
+
+# IDEs
+.idea
+.vscode

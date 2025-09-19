@@ -7,8 +7,12 @@ packages = ["src/python_sdk_rafay_workflow"]
 
 [project]
 name = "rafay_workflow_sdk"
-version = "0.0.30"
-authors = [{ name = "Bheema Sarat Chandra Kaki", email = "sarat@rafay.co" }, { name = "Avinash Varma", email = "avinash@rafay.co" }]
+version = "0.0.32"
+authors = [
+    { name = "Bheema Sarat Chandra Kaki", email = "sarat@rafay.co" },
+    { name = "Avinash Varma", email = "avinash@rafay.co" },
+    { name = "Akash MC", email = "akash@rafay.co" }
+]
 description = "Rafay workflow handler Python function SDK"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,10 +23,18 @@ classifiers = [
 ]
 
 dependencies = [
-  "waitress>=3.0.0",
-  "flask>=3.0.2",
-  "requests>=2.31.0",
-  "requests-toolbelt>=1.0.0",
+    "uvicorn[standard]>=0.24.0",
+    "fastapi>=0.104.0",
+    "httpx>=0.28.1",
+    "gunicorn>=23.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-httpserver>=1.0.0",
+    "requests>=2.31.0",
+    "backoff>=2.0.0",
 ]
 
 [project.urls]

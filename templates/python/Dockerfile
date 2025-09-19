@@ -4,8 +4,8 @@ ARG PYTHON_IMAGE_REPO=python
 ARG PYTHON_IMAGE_TAG=3.11-slim-bullseye
 
 
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} as watchdog
-FROM --platform=${TARGETPLATFORM:-linux/amd64} ${PYTHON_IMAGE_REPO}:${PYTHON_IMAGE_TAG} as build
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} AS watchdog
+FROM --platform=${TARGETPLATFORM:-linux/amd64} ${PYTHON_IMAGE_REPO}:${PYTHON_IMAGE_TAG} AS build
 
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
@@ -44,7 +44,7 @@ RUN pip install --no-cache-dir --proxy=${PROXY} --user -r requirements.txt
 USER root
 COPY --chown=app:app function/   .
 
-FROM build as test
+FROM build AS test
 
 ARG TEST_COMMAND=tox
 ARG TEST_ENABLED=false
@@ -52,7 +52,7 @@ ARG TEST_ENABLED=false
 RUN [ "$TEST_ENABLED" = "false" ] && echo "skipping tests" || eval "$TEST_COMMAND"
 
 
-FROM build as ship
+FROM build AS ship
 WORKDIR /home/app/
 
 USER app
