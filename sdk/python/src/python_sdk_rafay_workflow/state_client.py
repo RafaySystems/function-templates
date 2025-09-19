@@ -1,4 +1,4 @@
-import requests, json, time
+import requests
 from typing import Any, Callable, Optional
 
 class StateScope:
@@ -48,6 +48,22 @@ class StateClient:
     
     # ...implement methods using self.scope...
 
+    # ---------- Async Helpers ----------
+    async def _get_raw_async(self, key: str):
+        import httpx
+        params = {"key": key, "organization_id": self.organization_id}
+        if self.scope.project_id:
+            params["project_id"] = self.scope.project_id
+        if self.scope.environment_id:
+            params["environment_id"] = self.scope.environment_id
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            resp = await client.get(self.base_url, headers=self._headers(), params=params)
+            if resp.status_code == 404:
+                return None, 0
+            resp.raise_for_status()
+            data = resp.json()
+            return data["value"], int(data.get("version", 0))
+
     def _get_raw(self, key: str):
         params = {"key": key, "organization_id": self.organization_id}
         if self.scope.project_id: params["project_id"] = self.scope.project_id
@@ -62,11 +78,15 @@ class StateClient:
         return data["value"], int(data.get("version", 0))
 
     # ---------- Public API ----------
-    def Get(self, key: str) -> Any:
+    def get(self, key: str) -> Any:
         raw, version = self._get_raw(key)
         return raw, version
 
-    def SetKV(self, key: str, value: str, version: int) -> None:
+    async def get_async(self, key: str) -> Any:
+        raw, version = await self._get_raw_async(key)
+        return raw, version
+
+    def set_kv(self, key: str, value: str, version: int) -> None:
         """Create/update without OCC retry and let consumer handle conflicts"""
         body = {
             "scope": self.scope.__dict__,
@@ -81,7 +101,20 @@ class StateClient:
         resp.raise_for_status()
         return
 
-    def Set(self, key: str, update_fn: Callable[[Any], Any], max_retries: int = 5) -> None:
+    async def set_kv_async(self, key: str, value: str, version: int) -> None:
+        import httpx
+        body = {
+            "scope": self.scope.__dict__,
+            "key": key,
+            "value": value,
+            "version": version
+        }
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            resp = await client.put(self.base_url, headers=self._headers(), json=body)
+            resp.raise_for_status()
+        return
+
+    def set(self, key: str, update_fn: Callable[[Any], Any], max_retries: int = 5) -> None:
         """Create/update with OCC retry. update_fn takes old_value -> new_value"""
         for attempt in range(max_retries):
             old_value, version = self._get_raw(key)
@@ -103,7 +136,26 @@ class StateClient:
             return
         raise Exception(f"Set failed after {max_retries} retries due to OCC conflicts")
 
-    def Delete(self, key: str) -> None:
+    async def set_async(self, key: str, update_fn: Callable[[Any], Any], max_retries: int = 5) -> None:
+        import httpx
+        for attempt in range(max_retries):
+            old_value, version = await self._get_raw_async(key)
+            new_value = update_fn(old_value)
+            body = {
+                "scope": self.scope.__dict__,
+                "key": key,
+                "value": new_value,
+                "version": version
+            }
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                resp = await client.put(self.base_url, headers=self._headers(), json=body)
+                if resp.status_code == 409:
+                    continue
+                resp.raise_for_status()
+                return
+        raise Exception(f"set_async failed after {max_retries} retries due to OCC conflicts")
+
+    def delete(self, key: str) -> None:
         body = {
                 "scope": self.scope.__dict__,
                 "key": key
@@ -113,3 +165,14 @@ class StateClient:
                                json=body, timeout=self.timeout)
         if resp.status_code != 200 and resp.status_code != 404:
             resp.raise_for_status()
+
+    async def delete_async(self, key: str) -> None:
+        import httpx
+        body = {
+            "scope": self.scope.__dict__,
+            "key": key
+        }
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            resp = await client.request("DELETE", self.base_url, headers=self._headers(), json=body)
+            if resp.status_code != 200 and resp.status_code != 404:
+                resp.raise_for_status()

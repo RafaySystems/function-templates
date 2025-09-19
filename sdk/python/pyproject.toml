@@ -11,7 +11,8 @@ version = "0.0.32"
 authors = [
     { name = "Bheema Sarat Chandra Kaki", email = "sarat@rafay.co" },
     { name = "Avinash Varma", email = "avinash@rafay.co" },
-    { name = "Akash MC", email = "akash@rafay.co" }
+    { name = "Akash MC", email = "akash@rafay.co" },
+    { name = "Nirav Parikh", email = "nirav.parikh@rafay.co" }
 ]
 description = "Rafay workflow handler Python function SDK"
 readme = "README.md"
@@ -27,6 +28,7 @@ dependencies = [
     "fastapi>=0.104.0",
     "httpx>=0.28.1",
     "gunicorn>=23.0.0",
+    "requests>=2.31.0",
 ]
 
 [project.optional-dependencies]
