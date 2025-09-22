@@ -8,25 +8,22 @@ from .const import WorkflowTokenHeader
 
 
 class ActivityLogHandler(MemoryHandler):
-    def __init__(self, endpoint, token, timeout=10, verify=True, max_retries=3, *args, **kwargs):
+    def __init__(self, endpoint, token, client, timeout=10, verify=True, max_retries=3, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.endpoint = endpoint
         self.token = token
+        self.client = client
         self.timeout = timeout
         self.verify = verify
         self.max_retries = max_retries
         self._lock = asyncio.Lock()
 
-        # Reuse one async client per handler to avoid recreating connections
-        self.client = httpx.AsyncClient(timeout=httpx.Timeout(timeout), verify=verify)
-
     async def _send_logs(self, payload: bytes) -> httpx.Response:
         """Async log upload using httpx."""
-        files = {"content": ("stdout", BytesIO(payload), "text/plain")}
         return await self.client.post(
             f"{self.endpoint}?append=true",
             headers={WorkflowTokenHeader: self.token},
-            files=files,
+            files={"content": ("stdout", BytesIO(payload), "text/plain")},
         )
 
     def flush(self):
@@ -50,18 +47,16 @@ class ActivityLogHandler(MemoryHandler):
             buf = [self.format(record) for record in self.buffer]
             payload = ("\n".join(buf) + "\n").encode("utf-8")
 
-            attempt = 0
-            while attempt < self.max_retries:
+            for attempt in range(self.max_retries):
                 try:
                     resp = await self._send_logs(payload)
                     if resp.status_code == 200:
                         self.buffer.clear()
                         return
-                    else:
-                        attempt += 1
-                        await asyncio.sleep(1)
                 except Exception:
-                    attempt += 1
+                    pass
+                
+                if attempt < self.max_retries - 1:
                     await asyncio.sleep(1)
 
             # Only print error after max retries
@@ -69,7 +64,3 @@ class ActivityLogHandler(MemoryHandler):
                 f"[ActivityLogHandler] Failed to send logs to {self.endpoint} "
                 f"after {self.max_retries} attempts"
             )
-
-    async def close(self):
-        """Gracefully close the httpx client when shutting down."""
-        await self.client.aclose()
