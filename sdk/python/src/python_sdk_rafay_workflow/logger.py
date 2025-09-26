@@ -42,7 +42,7 @@ def log(f):
         endpoint = engine_endpoint + file_upload_path
         logging_handler = ActivityLogHandler(
             endpoint=endpoint, token=token, client=request.app.state.httpx_client,
-            capacity=LOG_BUFFER_CAPACITY, timeout=LOG_FLUSH_TIMEOUT, verify=(SKIP_TLS_VERIFY != "true")
+            capacity=LOG_BUFFER_CAPACITY, verify=(SKIP_TLS_VERIFY != "true")
         )
         logging_handler.setFormatter(logging.Formatter(_format))
         activity_logger.setLevel(LOG_LEVEL)
@@ -67,8 +67,7 @@ def log(f):
         finally:
             # Clean up handlers and remove from the registry
             try:
-                await logging_handler.async_flush()
-                logging_handler.close()
+                await logging_handler.close()
                 # Remove from app registry
                 if hasattr(request.app.state, 'loggers'):
                     app.state.loggers.discard(logging_handler)

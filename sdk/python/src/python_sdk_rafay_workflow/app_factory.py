@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
         for handler in list(app.state.loggers):
             try:
                 await handler.async_flush()
-                handler.close()
+                await handler.close()
             except Exception as e:
                 print(f"Error cleaning up ActivityLogHandler: {e}")
         app.state.loggers.clear()
