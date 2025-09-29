@@ -34,7 +34,7 @@ ARG CGO_ENABLED=0
 ENV CGO_ENABLED=${CGO_ENABLED}
 
 RUN goimports -w .
-RUN goimports-reviser -format -recursive -rm-unused ./...
+RUN find . -name "*.go" -exec goimports-reviser -format -rm-unused {} \;
 RUN go mod download
 
 

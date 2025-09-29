@@ -17,6 +17,10 @@ type Logger interface {
 
 type Object map[string]any
 
+func (r Object) MetaString(key string) string {
+	return r["metadata"].(map[string]string)[key]
+}
+
 type Request = Object
 type Response = Object
 
@@ -39,6 +43,10 @@ const (
 	WorkflowTokenHeader      = "X-Workflow-Token"
 	EngineAPIEndpointHeader  = "X-Engine-Endpoint"
 	ActivityFileUploadHeader = "X-Activity-File-Upload"
+	OrganizationIDHeader     = "X-Organization-ID"
+	ProjectIDHeader          = "X-Project-ID"
+	EaasStateEndpointHeader  = "X-Eaas-State-Endpoint"
+	EaasStateAPITokenHeader  = "X-Eaas-State-Token"
 )
 
 type ReadyResponse struct {

@@ -61,6 +61,13 @@ def create_app(handler):
                 "activityID": request.headers.get(ActivityIDHeader),
                 "environmentID": request.headers.get(EnvironmentIDHeader),
                 "environmentName": request.headers.get(EnvironmentNameHeader),
+                "activityID":       request.headers.get(ActivityIDHeader),
+                "environmentID":    request.headers.get(EnvironmentIDHeader),
+                "environmentName":  request.headers.get(EnvironmentNameHeader),
+                "organizationID":   request.headers.get(OrganizationIDHeader),
+                "projectID":        request.headers.get(ProjectIDHeader),
+                "stateStoreUrl":    request.headers.get(EaasStateEndpointHeader),
+                "stateStoreToken":  request.headers.get(EaasStateAPITokenHeader),
             }
 
             # If the handler is async → await it directly
