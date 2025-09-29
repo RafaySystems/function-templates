@@ -4,6 +4,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
@@ -19,19 +20,30 @@ async def lifespan(app: FastAPI):
     app.state.executor = ThreadPoolExecutor(
         max_workers=int(os.environ.get("MAX_WORKERS", "50"))
     )
-    
+
+    # create a shared httpx client for all activity loggers
+    app.state.httpx_client = httpx.AsyncClient(
+        timeout=httpx.Timeout(int(os.environ.get("LOG_FLUSH_TIMEOUT", "10"))),
+        verify=os.environ.get('skip_tls_verify', "false") != "true",
+        limits=httpx.Limits(max_connections=int(os.environ.get("LOG_UPLOAD_MAX_CONNECTIONS", "100")))
+    )
+
     yield
-    
-    # Shutdown phase - close all loggers and thread pool
+
+    # Shutdown phase - flush remaining loggers, close httpx client, and thread pool
     if hasattr(app.state, 'loggers'):
         for handler in list(app.state.loggers):
             try:
                 await handler.async_flush()
                 await handler.close()
             except Exception as e:
-                print(f"Error closing ActivityLogHandler: {e}")
+                print(f"Error cleaning up ActivityLogHandler: {e}")
         app.state.loggers.clear()
-    
+
+    # Close shared httpx client
+    if hasattr(app.state, 'httpx_client'):
+        await app.state.httpx_client.aclose()
+
     if hasattr(app.state, 'executor'):
         app.state.executor.shutdown(wait=True)
 
@@ -44,7 +56,7 @@ def create_app(handler):
     async def handle(request: Request, logger=None):
         try:
             payload = await request.json()
-                
+
             payload["metadata"] = {
                 "activityID": request.headers.get(ActivityIDHeader),
                 "environmentID": request.headers.get(EnvironmentIDHeader),
