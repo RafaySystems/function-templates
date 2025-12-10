@@ -12,7 +12,7 @@ def serve_function(handler, host='0.0.0.0', port=5000):
     # For production/OpenFaaS environments, use gunicorn with uvicorn workers
     if os.environ.get("fprocess") == "python main.py" or os.environ.get("OPENFAAS") == "true":
         from gunicorn.app.base import BaseApplication
-        
+
         class StandaloneApplication(BaseApplication):
             def __init__(self, application, options=None):
                 self.options = options or {}
@@ -26,11 +26,14 @@ def serve_function(handler, host='0.0.0.0', port=5000):
             def load(self):
                 return self.application
 
+        workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count()))
+        threads = int(os.environ.get("GUNICORN_THREADS", "2"))
+        print(f"Creating {workers} gunicorn workers with {threads} threads each")
         StandaloneApplication(app, {
             'bind': f'{host}:{port}',
-            'workers': int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count())),
+            'workers': workers,
             'worker_class': 'uvicorn.workers.UvicornWorker',
-            'threads': int(os.environ.get("GUNICORN_THREADS", "2")),
+            'threads': threads,
             'timeout': 0,
         }).run()
         return
