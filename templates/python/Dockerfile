@@ -67,6 +67,8 @@ ENV exec_timeout="0"
 ENV read_timeout="3600"
 ENV write_timeout="3600"
 ENV healthcheck_interval="30"
+ENV GUNICORN_WORKERS="4"
+ENV GUNICORN_THREADS="2"
 
 HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
 
