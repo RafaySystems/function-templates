@@ -369,7 +369,7 @@ func templatesPythonFunctionHandlerPy() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/python/function/handler.py", size: 3500, mode: os.FileMode(420), modTime: time.Unix(1765343577, 0)}
+	info := bindataFileInfo{name: "templates/python/function/handler.py", size: 3500, mode: os.FileMode(420), modTime: time.Unix(1768291477, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -434,7 +434,7 @@ func templatesPythonMainPy() (*asset, error) {
 	return a, nil
 }
 
-var _templatesPythonRequirementsTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x4c\x4b\xac\xd4\x2d\xcf\x2f\xca\x4e\xcb\xc9\x2f\xd7\x2d\x4e\xc9\xb6\xb5\x35\xd0\x33\xd0\x33\x36\x2a\x4a\xb6\x00\x04\x00\x00\xff\xff\x63\x77\x20\xd5\x1d\x00\x00\x00")
+var _templatesPythonRequirementsTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x4c\x4b\xac\xd4\x2d\xcf\x2f\xca\x4e\xcb\xc9\x2f\xd7\x2d\x4e\xc9\xb6\xb5\x35\xd0\x33\xd0\x33\x36\x2a\x4a\xb6\x04\x04\x00\x00\xff\xff\xf5\x47\x27\xa2\x1d\x00\x00\x00")
 
 func templatesPythonRequirementsTxtBytes() ([]byte, error) {
 	return bindataRead(
@@ -449,7 +449,7 @@ func templatesPythonRequirementsTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/python/requirements.txt", size: 29, mode: os.FileMode(420), modTime: time.Unix(1768250896, 0)}
+	info := bindataFileInfo{name: "templates/python/requirements.txt", size: 29, mode: os.FileMode(420), modTime: time.Unix(1768292374, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
