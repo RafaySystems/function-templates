@@ -8,7 +8,7 @@ The Rafay Python function template is designed to provide a seamless way to depl
 
 ## The Handler Function Interface
 
-The core of your function is the `handle` function, typically defined in `function/handler.py`.
+The core of your function is the `handle` function, typically defined in `handler.py`.
 
 ### Signature
 
@@ -110,7 +110,7 @@ def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
 The function repository follows a structure to separate the server logic from your function logic. When you create a new function, you can have any structure in your repository.
 
 ```text
-.
+templates/python/
 ├── Dockerfile              # Multi-stage Docker build file
 ├── main.py                 # Entry point that starts the SDK server
 ├── requirements.txt        # Root dependencies (SDK, FastAPI, etc.)
