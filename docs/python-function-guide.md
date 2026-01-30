@@ -265,7 +265,7 @@ if __name__ == "__main__":
 This file specifies the SDK version and core server dependencies.
 
 ```text
-rafay-workflow-sdk==0.0.32
+rafay-workflow-sdk>=0.0.33
 ```
 
 ### Function Requirements (`function/requirements.txt`)
@@ -304,6 +304,6 @@ docker build -t my-python-function:latest .
 ### Environment Variables
 
 - `fprocess`: The command to start your Python server (default: `python main.py`).
-- `GUNICORN_WORKERS`: Number of worker processes (default: CPU count).
+- `GUNICORN_WORKERS`: Number of worker processes (default: 4).
 - `GUNICORN_THREADS`: Number of threads per worker (default: 2).
 - `MAX_WORKERS`: Maximum workers for the sync handler thread pool (default: 50).

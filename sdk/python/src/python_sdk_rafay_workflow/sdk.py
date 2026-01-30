@@ -31,7 +31,7 @@ def serve_function(handler, host='0.0.0.0', port=5000):
             def load(self):
                 return self.application
 
-        workers = int(os.environ.get("GUNICORN_WORKERS", multiprocessing.cpu_count()))
+        workers = int(os.environ.get("GUNICORN_WORKERS", "4"))
         threads = int(os.environ.get("GUNICORN_THREADS", "2"))
         print(f"Creating {workers} gunicorn workers with {threads} threads each")
         StandaloneApplication(app, {

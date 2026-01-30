@@ -434,7 +434,7 @@ func templatesPythonMainPy() (*asset, error) {
 	return a, nil
 }
 
-var _templatesPythonRequirementsTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x4c\x4b\xac\xd4\x2d\xcf\x2f\xca\x4e\xcb\xc9\x2f\xd7\x2d\x4e\xc9\xb6\xb5\x35\xd0\x33\xd0\x33\x36\x02\x04\x00\x00\xff\xff\x0a\x65\x08\xb3\x1a\x00\x00\x00")
+var _templatesPythonRequirementsTxt = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x2a\x4a\x4c\x4b\xac\xd4\x2d\xcf\x2f\xca\x4e\xcb\xc9\x2f\xd7\x2d\x4e\xc9\xb6\xb3\x35\xd0\x33\xd0\x33\x36\x06\x04\x00\x00\xff\xff\x7f\x52\x80\x4a\x1a\x00\x00\x00")
 
 func templatesPythonRequirementsTxtBytes() ([]byte, error) {
 	return bindataRead(
@@ -449,7 +449,7 @@ func templatesPythonRequirementsTxt() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/python/requirements.txt", size: 26, mode: os.FileMode(420), modTime: time.Unix(1769698896, 0)}
+	info := bindataFileInfo{name: "templates/python/requirements.txt", size: 26, mode: os.FileMode(420), modTime: time.Unix(1769803798, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
