@@ -246,6 +246,39 @@ HEALTHCHECK --interval=5s CMD [ -e /tmp/.lock ] || exit 1
 CMD ["fwatchdog"]
 ```
 
+### Server Entry Point (`main.py`)
+
+The `main.py` file initializes the SDK and starts the server, passing your handler function to the SDK's serving logic.
+
+```python
+#!/usr/bin/env python
+
+from function import handler
+import python_sdk_rafay_workflow as sdk
+
+if __name__ == "__main__":
+    sdk.serve_function(handler.handle)
+```
+
+### Root Requirements (`requirements.txt`)
+
+This file specifies the SDK version and core server dependencies.
+
+```text
+rafay-workflow-sdk==0.0.32
+```
+
+### Function Requirements (`function/requirements.txt`)
+
+This file is where you list third-party libraries required by your function logic.
+This file can be merged with the above requirements.txt
+
+```text
+# Add your function dependencies here, e.g.:
+# requests==2.31.0
+# httpx==0.24.1
+```
+
 ### Multi-stage Build Flow
 
 ```mermaid
