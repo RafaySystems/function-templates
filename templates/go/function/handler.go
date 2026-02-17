@@ -103,6 +103,14 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 		}
 	}
 	event := sdk.NewEventDetails(req)
+	if event.IsAction() {
+		actionName, _ := event.GetActionName()
+		logger.Info(fmt.Sprintf("action %s performed", actionName))
+	} else if event.IsDeploy() {
+		logger.Info("deploy event", "event", event)
+	} else if event.IsDestroy() {
+		logger.Info("destroy event", "event", event)
+	}
 	resp["source"] = event.Source
 	resp["sourceName"] = event.SourceName
 	resp["type"] = event.Type
