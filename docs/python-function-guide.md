@@ -33,7 +33,10 @@ The `request` object is a Python dictionary that contains both the user-provided
         "organizationID": "...",  // ID of the organization
         "projectID": "...",       // ID of the project
         "stateStoreUrl": "...",   // URL for the state management API
-        "stateStoreToken": "..."  // Token for authenticating with the state store
+        "stateStoreToken": "...",  // Token for authenticating with the state store
+        "eventSource": "...",      // Event source (e.g. workload, action, environment)
+        "eventSourceName": "...",  // Name of the source resource
+        "eventType": "..."        // Event type (e.g. deploy, destroy, force-destroy)
     },
     "key1": "value1",             // Your inputs
     "key2": "value2"
@@ -48,6 +51,25 @@ def handle(logger, request):
     logger.info(f"Executing in project: {project_id}")
     # ...
 ```
+
+### Request metadata and headers
+
+The SDK populates `request["metadata"]` from incoming HTTP headers. The engine may send the following headers; each maps to a metadata key:
+
+| HTTP Header | Metadata key | Description |
+|-------------|--------------|-------------|
+| `X-Activity-ID` | `activityID` | Unique ID for the current execution. |
+| `X-Environment-ID` | `environmentID` | ID of the Rafay environment. |
+| `X-Environment-Name` | `environmentName` | Name of the Rafay environment. |
+| `X-Organization-ID` | `organizationID` | ID of the organization. |
+| `X-Project-ID` | `projectID` | ID of the project. |
+| `X-Eaas-State-Endpoint` | `stateStoreUrl` | URL for the state management API. |
+| `X-Eaas-State-Token` | `stateStoreToken` | Token for the state store. |
+| `X-Event-Source` | `eventSource` | Event source (e.g. `workload`, `action`, `schedules`, `environment`). |
+| `X-Event-Source-Name` | `eventSourceName` | Name of the source resource. |
+| `X-Event-Type` | `eventType` | Event type (e.g. `deploy`, `destroy`, `force-destroy`). |
+
+For event-driven branching, use the SDK’s `EventDetails` and `EventType` (see the [Python SDK README](../sdk/python/README.md#eventdetails)).
 
 - **Return Value**: A dictionary that will be returned as the JSON response body.
 
