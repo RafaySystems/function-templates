@@ -102,6 +102,36 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 			pstate.Delete(ctx, "project_payload")
 		}
 	}
+
+	// Set the state with the incremented counter
+	state := stateclient.NewBoundState(req).WithEnvScope()
+
+	// Set interim payload safely and set it to store
+	err = state.Set(ctx, "payload", func(old json.RawMessage) (json.RawMessage, error) {
+		if len(old) == 0 {
+			return json.Marshal(map[string]any{
+				"counter": 1.0,
+			})
+		}
+		var oldValue map[string]any
+		if err := json.Unmarshal(old, &oldValue); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal old value: %w", err)
+		}
+		newValue := oldValue["counter"].(float64) + 1
+		if new, err := json.Marshal(map[string]any{
+			"counter": newValue,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to marshal new value: %w", err)
+		} else {
+			resp["payload"] = newValue
+			logger.Info("incremented counter within payload", "new_value", newValue)
+			return new, nil
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	event := sdk.NewEventDetails(req)
 	if event.IsAction() {
 		actionName, _ := event.GetActionName()
