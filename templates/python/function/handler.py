@@ -2,8 +2,10 @@ import asyncio
 from logging import Logger
 from typing import Dict, Any
 
-from python_sdk_rafay_workflow import sdk
+from python_sdk_rafay_workflow import sdk, EventDetails
 from python_sdk_rafay_workflow.state_client import StateClientBuilder
+
+from sdk.python.src.python_sdk_rafay_workflow import EventDetails
 
 
 async def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,7 +47,7 @@ async def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
     pstate.set_kv("project_counter", str(int(value or 0) + 1), version)
     pstate.delete("project_counter")
     logger.info("project_counter sync deleted")
-    
+
     # --- ASYNC TESTS ---
     await pstate.set_async("project_counter_async", lambda old: int(old or 0) + 1)
     value_async, version_async = await pstate.get_async("project_counter_async")
@@ -62,7 +64,7 @@ async def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
     state.set_kv("env_counter", str(int(value or 0) + 1), version)
     state.delete("env_counter")
     logger.info("env_counter sync deleted")
-    
+
     # --- ASYNC TESTS ---
     await state.set_async("env_counter_async", lambda old: int(old or 0) + 1)
     value_async, version_async = await state.get_async("env_counter_async")
@@ -75,6 +77,17 @@ async def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"iteration {i + 1}: sleeping for 1 minute")
         await asyncio.sleep(60) # Use time.sleep for synchronous sleep
 
+    event = EventDetails(request)
+    if event.is_action():
+        action_name, _ = event.get_action_name()
+        logger.info(f"action: {action_name} performed")
+    elif event.is_deploy():
+        logger.info(f"deploy event: {event}")
+    elif event.is_destroy():
+        logger.info(f"destroy event: {event}")
     return {
         "output": "Hello Python!",
+        "source": event.source,
+        "sourceName": event.source_name,
+        "type": event.type,
     }

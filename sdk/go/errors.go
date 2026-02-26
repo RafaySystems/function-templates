@@ -44,8 +44,8 @@ func (e *errExecuteAgain) Error() string {
 }
 
 func (e *errExecuteAgain) Is(err error) bool {
-	_, ok := err.(*errExecuteAgain)
-	return ok
+	var ex *errExecuteAgain
+	return errors.As(err, &ex)
 }
 
 func (e *errExecuteAgain) Unwrap() error {
@@ -62,8 +62,8 @@ func (e *errFailed) Error() string {
 }
 
 func (e *errFailed) Is(err error) bool {
-	_, ok := err.(*errFailed)
-	return ok
+	var ef *errFailed
+	return errors.As(err, &ef)
 }
 
 func (e *errFailed) Unwrap() error {
@@ -79,8 +79,8 @@ func (e *errTransient) Error() string {
 }
 
 func (e *errTransient) Is(err error) bool {
-	_, ok := err.(*errTransient)
-	return ok
+	var et *errTransient
+	return errors.As(err, &et)
 }
 
 func (e *errTransient) Unwrap() error {
@@ -96,8 +96,8 @@ func (e *errNotFound) Error() string {
 }
 
 func (e *errNotFound) Is(err error) bool {
-	_, ok := err.(*errNotFound)
-	return ok
+	var enf *errNotFound
+	return errors.As(err, &enf)
 }
 
 func (e *errNotFound) Unwrap() error {
@@ -183,8 +183,8 @@ func (e *errConflict) Error() string {
 }
 
 func (e *errConflict) Is(err error) bool {
-	_, ok := err.(*errConflict)
-	return ok
+	var ec *errConflict
+	return errors.As(err, &ec)
 }
 
 func (e *errConflict) Unwrap() error {

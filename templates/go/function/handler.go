@@ -132,5 +132,17 @@ func Handle(ctx context.Context, logger sdk.Logger, req sdk.Request) (sdk.Respon
 		return nil, err
 	}
 
-	return sdk.Response(resp), nil
+	event := sdk.NewEventDetails(req)
+	if event.IsAction() {
+		actionName, _ := event.GetActionName()
+		logger.Info(fmt.Sprintf("action %s performed", actionName))
+	} else if event.IsDeploy() {
+		logger.Info("deploy event", "event", event)
+	} else if event.IsDestroy() {
+		logger.Info("destroy event", "event", event)
+	}
+	resp["source"] = event.Source
+	resp["sourceName"] = event.SourceName
+	resp["type"] = event.Type
+	return resp, nil
 }

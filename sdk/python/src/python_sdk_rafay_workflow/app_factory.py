@@ -65,6 +65,9 @@ def create_app(handler):
                 "projectID": request.headers.get(ProjectIDHeader),
                 "stateStoreUrl": request.headers.get(EaasStateEndpointHeader),
                 "stateStoreToken": request.headers.get(EaasStateAPITokenHeader),
+                "eventSource": request.headers.get(EventSourceHeader),
+                "eventSourceName": request.headers.get(EventSourceNameHeader),
+                "eventType": request.headers.get(EventTypeHeader),
             }
 
             # If the handler is async → await it directly

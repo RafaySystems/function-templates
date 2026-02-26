@@ -1,1 +1,1 @@
-rafay-workflow-sdk>=0.0.33
+rafay-workflow-sdk==0.0.34rc2
