@@ -5,7 +5,7 @@ SDK for building Python functions invoked by the Environment Manager workflow en
 ## Installation
 
 ```bash
-pip install python_sdk_rafay_workflow
+pip install rafay-workflow-sdk
 ```
 
 Or add the package to your project (e.g. from a local or private repo). For a working example, see [examples/python/cloudformation](../../examples/python/cloudformation).
