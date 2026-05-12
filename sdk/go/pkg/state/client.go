@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 
 	sdk "github.com/RafaySystems/function-templates/sdk/go"
 	"github.com/RafaySystems/function-templates/sdk/go/pkg/httputil"
@@ -37,8 +38,12 @@ type boundStateBuilder struct {
 }
 
 func NewBoundState(req sdk.Request) StateScopeBuilder {
+	var httpopts []httputil.RetriableHTTPOption
+	if os.Getenv("skip_tls_verify") == "true" {
+		httpopts = append(httpopts, httputil.WithTLSInsecureSkipVerify())
+	}
 	return &boundStateBuilder{
-		httpClient:     httputil.NewRetriableHTTPClient().StandardClient(),
+		httpClient:     httputil.NewRetriableHTTPClient(httpopts...).StandardClient(),
 		baseURL:        req.MetaString("stateStoreUrl"),
 		token:          req.MetaString("stateStoreToken"),
 		organizationID: req.MetaString("organizationID"),
