@@ -2,6 +2,8 @@ github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088 h1:lD0vx6
 github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088/go.mod h1:PjkK9m0dJG1o7nVmtMTUecOlYzRVjX7+lWlbkCm+tmA=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260226075358-a0e4f6732ae5 h1:epM9OFecekY1955etWdkwBTwrnToFKX+gL9vw34Slg4=
 github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260226075358-a0e4f6732ae5/go.mod h1:83igh3irpDiD4GzGRYE7TnM2sGg0V2yyPmqqfBsjOxQ=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260512114444-e7e9fee01df7 h1:F5u+IdfIimpZYHd3ZyEDcBCK47V4THYzpY/rnO/yzt4=
+github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260512114444-e7e9fee01df7/go.mod h1:83igh3irpDiD4GzGRYE7TnM2sGg0V2yyPmqqfBsjOxQ=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
