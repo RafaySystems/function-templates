@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/RafaySystems/envmgr-pkgs v0.0.0-20240307035059-182a1aad9088
-	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260226075358-a0e4f6732ae5
+	github.com/RafaySystems/function-templates/sdk/go v0.0.0-20260512114444-e7e9fee01df7
 )
 
 require (

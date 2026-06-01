@@ -1,11 +1,14 @@
+import os
 import requests
 from typing import Any, Callable, Optional
+
 
 class StateScope:
     def __init__(self, organization_id, project_id=None, environment_id=None):
         self.organization_id = organization_id
         self.project_id = project_id
         self.environment_id = environment_id
+
 
 class StateClientBuilder:
     def __init__(self, request):
@@ -15,18 +18,20 @@ class StateClientBuilder:
         self.organization_id = meta["organizationID"]
         self.project_id = meta.get("projectID")
         self.environment_id = meta.get("environmentID")
+        self.verify = os.environ.get("skip_tls_verify", "false").lower() != "true"
 
     def with_org_scope(self):
-        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id))
+        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id), verify=self.verify)
 
     def with_project_scope(self):
-        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id, self.project_id))
+        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id, self.project_id), verify=self.verify)
 
     def with_env_scope(self):
-        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id, self.project_id, self.environment_id))
+        return StateClient(self.base_url, self.token, self.organization_id, self.project_id, self.environment_id, StateScope(self.organization_id, self.project_id, self.environment_id), verify=self.verify)
+
 
 class StateClient:
-    def __init__(self, base_url, token, organization_id, project_id, environment_id, scope: StateScope, timeout=5):
+    def __init__(self, base_url, token, organization_id, project_id, environment_id, scope: StateScope, timeout=5, verify=True):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.scope = scope
@@ -34,6 +39,7 @@ class StateClient:
         self.organization_id = organization_id
         self.project_id = project_id
         self.environment_id = environment_id
+        self.verify = verify
 
     # ---------- Helpers ----------
     def _headers(self):
@@ -45,7 +51,7 @@ class StateClient:
             "Content-Type": "application/json",
         }
         return headers
-    
+
     # ...implement methods using self.scope...
 
     # ---------- Async Helpers ----------
@@ -56,7 +62,7 @@ class StateClient:
             params["project_id"] = self.scope.project_id
         if self.scope.environment_id:
             params["environment_id"] = self.scope.environment_id
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, verify=self.verify) as client:
             resp = await client.get(self.base_url, headers=self._headers(), params=params)
             if resp.status_code == 404:
                 return None, 0
@@ -70,7 +76,7 @@ class StateClient:
         if self.scope.environment_id: params["environment_id"] = self.scope.environment_id
 
         resp = requests.get(self.base_url, headers=self._headers(),
-                            params=params, timeout=self.timeout)
+                            params=params, timeout=self.timeout, verify=self.verify)
         if resp.status_code == 404:
             return None, 0
         resp.raise_for_status()
@@ -95,9 +101,8 @@ class StateClient:
             "version": version
         }
         resp = requests.put(self.base_url,
-                                headers=self._headers(),
-                                json=body, timeout=self.timeout)
-
+                            headers=self._headers(),
+                            json=body, timeout=self.timeout, verify=self.verify)
         resp.raise_for_status()
         return
 
@@ -109,7 +114,7 @@ class StateClient:
             "value": value,
             "version": version
         }
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, verify=self.verify) as client:
             resp = await client.put(self.base_url, headers=self._headers(), json=body)
             resp.raise_for_status()
         return
@@ -127,8 +132,8 @@ class StateClient:
                 "version": version
             }
             resp = requests.put(self.base_url,
-                                 headers=self._headers(),
-                                 json=body, timeout=self.timeout)
+                                headers=self._headers(),
+                                json=body, timeout=self.timeout, verify=self.verify)
             if resp.status_code == 409:
                 # OCC conflict, retry
                 continue
@@ -147,7 +152,7 @@ class StateClient:
                 "value": new_value,
                 "version": version
             }
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(timeout=self.timeout, verify=self.verify) as client:
                 resp = await client.put(self.base_url, headers=self._headers(), json=body)
                 if resp.status_code == 409:
                     continue
@@ -157,12 +162,12 @@ class StateClient:
 
     def delete(self, key: str) -> None:
         body = {
-                "scope": self.scope.__dict__,
-                "key": key
-            }
+            "scope": self.scope.__dict__,
+            "key": key
+        }
         resp = requests.delete(self.base_url,
                                headers=self._headers(),
-                               json=body, timeout=self.timeout)
+                               json=body, timeout=self.timeout, verify=self.verify)
         if resp.status_code != 200 and resp.status_code != 404:
             resp.raise_for_status()
 
@@ -172,7 +177,7 @@ class StateClient:
             "scope": self.scope.__dict__,
             "key": key
         }
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, verify=self.verify) as client:
             resp = await client.request("DELETE", self.base_url, headers=self._headers(), json=body)
             if resp.status_code != 200 and resp.status_code != 404:
                 resp.raise_for_status()

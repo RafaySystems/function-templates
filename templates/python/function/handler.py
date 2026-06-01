@@ -5,8 +5,6 @@ from typing import Dict, Any
 from python_sdk_rafay_workflow import sdk, EventDetails
 from python_sdk_rafay_workflow.state_client import StateClientBuilder
 
-from sdk.python.src.python_sdk_rafay_workflow import EventDetails
-
 
 async def handle(logger: Logger, request: Dict[str, Any]) -> Dict[str, Any]:
     logger.info(f"received request, req: {request}")
