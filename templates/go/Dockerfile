@@ -1,13 +1,13 @@
 ARG WATCHDOG_IMAGE_REPO=ghcr.io/openfaas/of-watchdog
-ARG WATCHDOG_IMAGE_TAG=0.10.6
+ARG WATCHDOG_IMAGE_TAG=0.11.4
 ARG GO_IMAGE_REPO=golang
-ARG GO_IMAGE_TAG=1.24-alpine3.23
+ARG GO_IMAGE_TAG=1.26-alpine3.23
 ARG FINAL_BASE_IMAGE=alpine:3.23
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} AS watchdog
 FROM --platform=${BUILDPLATFORM:-linux/amd64} ${GO_IMAGE_REPO}:${GO_IMAGE_TAG} AS build
 
-RUN go install -v github.com/incu6us/goimports-reviser/v3@v3.8.2
+RUN go install -v github.com/incu6us/goimports-reviser/v3@v3.13.2
 RUN go install golang.org/x/tools/cmd/goimports@6a5b66bef78dc7a1cf8593b276f35102ec0cb11c
 
 ARG TARGETPLATFORM

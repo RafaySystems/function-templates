@@ -1,7 +1,7 @@
 ARG WATCHDOG_IMAGE_REPO=ghcr.io/openfaas/of-watchdog
-ARG WATCHDOG_IMAGE_TAG=0.10.6
+ARG WATCHDOG_IMAGE_TAG=0.11.4
 ARG PYTHON_IMAGE_REPO=python
-ARG PYTHON_IMAGE_TAG=3.11-slim-bullseye
+ARG PYTHON_IMAGE_TAG=3.14-slim-trixie
 
 
 FROM --platform=${TARGETPLATFORM:-linux/amd64} ${WATCHDOG_IMAGE_REPO}:${WATCHDOG_IMAGE_TAG} AS watchdog
@@ -18,8 +18,10 @@ RUN apt-get -qy update \
     && rm -rf /var/lib/apt/lists/*
 
 # Add non root user
-RUN addgroup --system app && adduser app --system --ingroup app
-RUN chown app /home/app
+RUN addgroup --system app \
+    && adduser app --system --ingroup app --home /home/app \
+    && mkdir -p /home/app \
+    && chown -R app:app /home/app
 
 USER app
 
